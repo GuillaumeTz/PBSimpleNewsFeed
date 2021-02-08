@@ -20,4 +20,8 @@ Copy PBSimpleNewsFeed.app into ./applications folder.
 * Settings : show app settings.
 * Back : go to parent folder.
 
+#Screenshots
+![alt text](https://github.com/GuillaumeTz/PBSimpleNewsFeed/blob/main/Screenshots/Main.png)
+![alt text](https://github.com/GuillaumeTz/PBSimpleNewsFeed/blob/main/Screenshots/FeedView.png)
+![alt text](https://github.com/GuillaumeTz/PBSimpleNewsFeed/blob/main/Screenshots/LastEntriesView.png)
 
