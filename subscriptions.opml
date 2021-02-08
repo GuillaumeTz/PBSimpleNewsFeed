@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+    <head>
+        <title>Feed Subscriptions</title>
+    </head>
+    <body>
+        <outline title="Tech" text="Tech">
+            <outline text="InternetActu.net" title="InternetActu.net" type="rss" xmlUrl="http://www.internetactu.net/feed/atom/" htmlUrl="http://www.internetactu.net" />
+            <outline text="Wait But Why » Feed" title="Wait But Why » Feed" type="rss" xmlUrl="http://waitbutwhy.com/feed" htmlUrl="https://waitbutwhy.com" />
+        </outline>
+        <outline title="Gamedev" text="Gamedev">
+            <outline text="Gamasutra Article Feed" title="Gamasutra Article Feed" type="rss" xmlUrl="http://feeds.feedburner.com/GamasutraFeatureArticles/" htmlUrl="http://www.gamasutra.com/newswire" />
+            <outline text="Gamasutra blogs expert" title="Gamasutra blogs expert" type="rss" xmlUrl="http://www.gamasutra.com/blogs/rss-expert/" htmlUrl="https://www.gamasutra.com/blogs/expert/" />
+            <outline text="Gamasutra All Blogs" title="Gamasutra All Blogs" type="rss" xmlUrl="http://www.gamasutra.com/blogs/rss/" htmlUrl="https://www.gamasutra.com/blogs/" />
+            <outline text="GameDev Reddit" title="Reddit GameDev RSS" type="rss" xmlUrl="https://www.reddit.com/r/gamedev/.rss" htmlUrl="https://www.reddit.com/r/gamedev/" />
+            <outline text="IndieDev Reddit" title="Reddit IndieDev RSS" type="rss" xmlUrl="https://www.reddit.com/r/IndieDev/.rss" htmlUrl="https://www.reddit.com/r/IndieDev/" />
+            <outline text="GAMEAI Reddit RSS" title="GAMEAI Reddit RSS" type="rss" xmlUrl="https://www.reddit.com/r/gameai/new/.rss" htmlUrl="https://www.reddit.com/r/gameai/new/" />
+        </outline>
+        <outline title="Prog" text="Prog">
+            <outline text="Cpp Reddit RSS" title="Cpp Reddit RSS" type="rss" xmlUrl="https://www.reddit.com/r/cpp/.rss" htmlUrl="https://www.reddit.com/r/cpp/" />
+            <outline text="Standard C++" title="Standard C++" type="rss" xmlUrl="https://isocpp.org/blog/rss" htmlUrl="http://isocpp.org/blog" />
+            <outline text="Sutter’s Mill" title="Sutter’s Mill" type="rss" xmlUrl="https://herbsutter.com/feed/" htmlUrl="https://herbsutter.com" />
+        </outline> 
+    </body>
+</opml>
