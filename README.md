@@ -27,3 +27,5 @@ Copy PBSimpleNewsFeed.app into ./applications folder.
 
 ![alt text](https://github.com/GuillaumeTz/PBSimpleNewsFeed/blob/main/Screenshots/LastEntriesView.png)
 
+# License
+GNU General Public License v3.0

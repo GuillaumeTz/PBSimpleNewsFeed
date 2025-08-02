@@ -1,0 +1,17 @@
+CMakeFiles
+bin_arm
+bin_pc
+Debug
+x64
+.directory
+system
+
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cbp
+*.user
+*.lnk
+.vs
+*.sln
+*.vcxproj*
