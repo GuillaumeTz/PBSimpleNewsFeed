@@ -16,6 +16,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 #include "CUiNewsEntryButton.h"
 #include "CApp.h"
+#include "ui/CUiText.h"
 
 #include <sstream>
 

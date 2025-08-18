@@ -22,7 +22,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 #include "inkview.h"
 #include "ui/CUiFont.h"
 
-#define APP_FOLDER CURRENTPROFILE "/SimpleNewsFeed"
+#define APP_FOLDER CURRENTPROFILE "/PBSimpleNewsFeed"
 #define CACHE_FOLDER APP_FOLDER "/Cache"
 
 class CAppSettings
@@ -50,10 +50,11 @@ public:
 	CUiFont ContextMenuFont;
 
 	std::string PathToOPML;
-	std::string PathToLastImportedOPML;
 	std::string PathToSavedOPML;
 	std::string ConfigFilePath;
 	int MaxEntryToKeepByFeed;
+	int ResolutionWidth;
+	int ResolutionHeight;
 	bool bSynchronizeAtStart;
 
 public:

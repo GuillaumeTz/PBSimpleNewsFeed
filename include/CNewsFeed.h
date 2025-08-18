@@ -78,17 +78,23 @@ public:
 	std::vector<CNewsFeed> NewsFeeds;
 	std::vector<CNewsEntry> Entries;
 
-	int NbUnRead;
-	int NbNew;
 	std::time_t LastEntryTime;
 	bool bDisplayLastEntryFirst;
 	bool bDeleted;
+
+private:
+	int NbUnRead;
+	int NbNew;
 	bool bIsLoaded;
 
+public:
 	bool IsLoaded() const { return bIsLoaded; }
+	void LoadFeeds(bool bForce, bool bRecursive);
 	void LoadDocument(bool bForce = false);
 	void LoadDocument(const std::string& InFilePath);
 	void SaveDocument();
+
+	void TransferFromOldFeed(const CNewsFeed& OldFeed);
 
 	std::vector<CDownload> Sync();
 	std::vector<CDownload> AdditionalSync();
@@ -96,11 +102,14 @@ public:
 	std::string GetLocalFilePath(const std::string& Suffix) const;
 
 	void MarkAsRead();
-	void MarkAsDeleted();
 	int GetNbNew() const;
 	int GetNbUnRead() const;
 
 	std::vector<CNewsFeed*> GetChildrenRecursive();
+	const CNewsFeed* FindFeedByUniqueId(const std::string& InUniqueId, bool bRecursive = true) const;
+	const CNewsEntry* FindEntryByUniqueId(const std::string& InUniqueId) const;
+
+	void ParseOutlineElementFromOpml(tinyxml2::XMLElement* OutlineElement);
 
 private:
 	void ReadRss(tinyxml2::XMLDocument* XmlDoc);

@@ -61,8 +61,8 @@ public:
 
 	CFeedList FeedList;
 
-	CUiMainPage MainPage;
-	CUiSettingsPage SettingsPage;
+	TSharedPtr<CUiMainPage> MainPage;
+	TSharedPtr<CUiSettingsPage> SettingsPage;
 
 	SHistoryItem LastEntryRead;
 	std::stack<SHistoryItem> History;

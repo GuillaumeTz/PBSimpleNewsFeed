@@ -18,6 +18,8 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 #include "datetimelite.h"
 
+#include <iostream>
+
 CFeedList::CFeedList()
 {
 	RootFeed.bIsFolder = true;
@@ -28,6 +30,11 @@ CFeedList::CFeedList()
 CFeedList::~CFeedList()
 {
 	delete XmlDoc;
+}
+
+void CFeedList::LoadFeeds(bool bForce)
+{
+	RootFeed.LoadFeeds(true, true);
 }
 
 void CFeedList::LoadDocument(const std::string& InPath)
@@ -59,30 +66,18 @@ void CFeedList::LoadDocument(const std::string& InPath)
 
 void CFeedList::ParseOutlineElement(tinyxml2::XMLElement* OutlineElement, CNewsFeed* Parent, unsigned int Index)
 {
+	// std::cout << "Parsing outline elements";
 	unsigned int SubIndex = 0;
 	for (tinyxml2::XMLElement* Element = tinyxml2::XMLHandle(OutlineElement).FirstChildElement("outline").ToElement(); Element != NULL; Element = Element->NextSiblingElement("outline"))
 	{
 		CNewsFeed NewsFeed;
-		NewsFeed.bDeleted = (Element->GetAttribute("bDeleted", 0) == 1);
-		NewsFeed.Url = Element->GetAttribute("xmlUrl", "");
-		NewsFeed.Title = Element->GetAttribute("title", Element->GetAttribute("text", ""));
-		NewsFeed.UniqueId = Element->GetAttribute("UniqueId");
-		if (NewsFeed.UniqueId.empty())
-		{
-			NewsFeed.UniqueId = NewsFeed.Url;
-		}
+		NewsFeed.ParseOutlineElementFromOpml(Element);
 		if (NewsFeed.UniqueId.empty())
 		{
 			std::stringstream stream;
 			stream << Index << "_" << NewsFeed.Title;
 			NewsFeed.UniqueId = stream.str();
 		}
-		NewsFeed.bIsFolder = NewsFeed.Url.empty();
-		NewsFeed.XmlElement = Element;
-		NewsFeed.NbUnRead = Element->GetAttribute("NbUnRead", 0);
-		NewsFeed.NbNew = Element->GetAttribute("NbNew", 0);
-		NewsFeed.LastEntryTime = Element->GetAttribute("LastEntryTime", 0);
-		NewsFeed.bDisplayLastEntryFirst = (Element->GetAttribute("bDisplayLastEntryFirst", 1) != 0);
 		Parent->NewsFeeds.push_back(NewsFeed);
 		if (NewsFeed.bIsFolder)
 		{
@@ -91,6 +86,7 @@ void CFeedList::ParseOutlineElement(tinyxml2::XMLElement* OutlineElement, CNewsF
 		}
 		SubIndex++;
 	}
+	// std::cout << std::endl;
 }
 
 void CFeedList::SaveDocument(const std::string& InPath)
@@ -106,12 +102,15 @@ void CFeedList::SaveDocument(const std::string& InPath)
 	}
 }
 
+const CNewsFeed* CFeedList::FindFeedByUniqueId(const std::string& InUniqueId, bool bRecursive /*= true*/) const
+{
+	if (RootFeed.UniqueId == InUniqueId)
+		return &RootFeed;
+
+	return RootFeed.FindFeedByUniqueId(InUniqueId, bRecursive);
+}
+
 std::vector<CDownload> CFeedList::Sync()
 {
 	return RootFeed.Sync();
-}
-
-std::vector<SFeedDiff> CFeedList::MakeDiffWith(const CFeedList& RhsFeedList) const
-{
-
 }

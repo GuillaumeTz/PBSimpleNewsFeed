@@ -25,5 +25,5 @@ sudo apt install build-essential cmake autoconf qtcreator libgtk2.0-dev libbz2-d
 emulator compilation :
 sudo cp PBSDK/lib/libinkview.so /usr/lib/libinkview.so
 
-mk -s system ~/PBDEV/system
+ln -s ~/PBDEV/system system
 sudo apt install gnome-themes-standard

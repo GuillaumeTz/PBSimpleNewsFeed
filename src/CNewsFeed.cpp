@@ -162,6 +162,19 @@ CNewsFeed::CNewsFeed()
 	LastEntryTime = 0;
 }
 
+void CNewsFeed::LoadFeeds(bool bForce, bool bRecursive)
+{
+	LoadDocument(true);
+
+	if (!bRecursive)
+		return;
+
+	for (CNewsFeed& Feed : NewsFeeds)
+	{
+		Feed.LoadFeeds(bForce, bRecursive);
+	}
+}
+
 void CNewsFeed::LoadDocument(bool bForce)
 {
 	if (bIsFolder)
@@ -230,7 +243,7 @@ void CNewsFeed::LoadDocument(bool bForce)
 					continue;
 
 				Entries.insert(Entries.begin(), Entry);
-				//std::cerr << "New entry " << Entry.Title << " ! " << std::endl;
+				std::cout << "New entry " << Entry.Title << " ! " << std::endl;
 			}
 
 			iv_unlink(FilePathDL.c_str());
@@ -241,12 +254,12 @@ void CNewsFeed::LoadDocument(bool bForce)
 				for (int Index = App->AppSettings.MaxEntryToKeepByFeed; Index < Entries.size(); ++Index)
 				{
 					//Need to delete cache files
-					//std::cerr << "Deleting entry " << Entries[Index].Title << std::endl;
-					//std::cerr << "Unlink file " << CApp::GetReaderModeDownloadFor(Entries[Index].Link, this).GetFilePath().c_str() << std::endl;
+					std::cout << "Deleting entry " << Entries[Index].Title << std::endl;
+					std::cout << "Unlink file " << CApp::GetReaderModeDownloadFor(Entries[Index].Link, this).GetFilePath().c_str() << std::endl;
 					iv_unlink(CApp::GetReaderModeDownloadFor(Entries[Index].Link, this).GetFilePath().c_str());
 					if (!Entries[Index].ExternalLink.empty())
 					{
-						//std::cerr << "Unlink file " << CApp::GetReaderModeDownloadFor(Entries[Index].ExternalLink, this).GetFilePath().c_str() << std::endl;
+						std::cout << "Unlink file " << CApp::GetReaderModeDownloadFor(Entries[Index].ExternalLink, this).GetFilePath().c_str() << std::endl;
 						iv_unlink(CApp::GetReaderModeDownloadFor(Entries[Index].ExternalLink, this).GetFilePath().c_str());
 					}
 				}
@@ -307,7 +320,7 @@ void CNewsFeed::SaveDocument()
 		XmlElement->SetAttribute("NbNew", GetNbNew());
 		XmlElement->SetAttribute("LastEntryTime", int(LastEntryTime));
 		XmlElement->SetAttribute("bDisplayLastEntryFirst", bDisplayLastEntryFirst);
-		XmlElement->SetAttribute("UniqueId", UniqueId);
+		XmlElement->SetAttribute("UniqueId", UniqueId.c_str());
 		if (bDeleted)
 			XmlElement->SetAttribute("bDeleted", bDeleted);
 	}
@@ -361,11 +374,32 @@ void CNewsFeed::SaveDocument()
 	}
 }
 
+void CNewsFeed::TransferFromOldFeed(const CNewsFeed& OldFeed)
+{
+	std::cout << "Transfer old information from old feed " << OldFeed.Url << std::endl;
+	bDeleted = OldFeed.bDeleted;
+	bDisplayLastEntryFirst = OldFeed.bDisplayLastEntryFirst;
+	LastEntryTime = OldFeed.LastEntryTime;
+	NbUnRead = OldFeed.NbUnRead;
+	NbNew = OldFeed.NbNew;
+
+	for (CNewsEntry& Entry : Entries)
+	{
+		const CNewsEntry* OldEntry = OldFeed.FindEntryByUniqueId(Entry.UniqueId);
+		if (!OldEntry)
+			continue;
+
+		Entry.bIsNew = OldEntry->bIsNew;
+		Entry.bHasRead = OldEntry->bHasRead;
+	}
+}
+
 std::vector<CDownload> CNewsFeed::Sync()
 {
 	std::vector<CDownload> Downloads;
 	if (bIsFolder)
 	{
+		std::cout << "Newsfeed folder sync : " << Title << std::endl;
 		for (int Index = 0; Index < NewsFeeds.size(); ++Index)
 		{
 			std::vector<CDownload> NewDownloads = NewsFeeds[Index].Sync();
@@ -374,6 +408,7 @@ std::vector<CDownload> CNewsFeed::Sync()
 	}
 	else
 	{
+		std::cout << "Newsfeed sync :" << this->Url << std::endl;
 		std::string FixedUrl = Url;
 		//fix for reddit
 		if (FixedUrl.find("https://www.reddit.com/r/") != std::string::npos || FixedUrl.find("reddit.com/r/") != std::string::npos)
@@ -390,6 +425,7 @@ std::vector<CDownload> CNewsFeed::AdditionalSync()
 	std::vector<CDownload> Downloads;
 	if (bIsFolder)
 	{
+		std::cout << "Newsfeed folder additional sync : " << Title << std::endl;
 		for (int Index = 0; Index < NewsFeeds.size(); ++Index)
 		{
 			std::vector<CDownload> NewDownloads = NewsFeeds[Index].AdditionalSync();
@@ -398,6 +434,7 @@ std::vector<CDownload> CNewsFeed::AdditionalSync()
 	}
 	else
 	{
+		std::cout << "Newsfeed additional sync :" << this->Url << std::endl;
 		for (int Index = 0; Index < Entries.size(); ++Index)
 		{
 			const CNewsEntry& NewsEntry = Entries[Index];
@@ -464,11 +501,6 @@ void CNewsFeed::MarkAsRead()
 	{
 		Entries[Index].MarkAsRead();
 	}
-}
-
-void CNewsFeed::MarkAsDeleted()
-{
-	bDeleted = true;
 }
 
 int CNewsFeed::GetNbNew() const
@@ -538,6 +570,55 @@ std::vector<CNewsFeed*> CNewsFeed::GetChildrenRecursive()
 		Result.push_back(this);
 	}
 	return Result;
+}
+
+const CNewsFeed* CNewsFeed::FindFeedByUniqueId(const std::string& InUniqueId, bool bRecursive /*= true*/) const
+{
+	for (const CNewsFeed& Child : NewsFeeds)
+	{
+		if (Child.UniqueId == InUniqueId)
+		{
+			return &Child;
+		}
+	}
+
+	if (bRecursive)
+	{
+		for (const CNewsFeed& Child : NewsFeeds)
+		{
+			const CNewsFeed* FoundFeed = Child.FindFeedByUniqueId(InUniqueId, bRecursive);
+			if (FoundFeed)
+				return FoundFeed;
+		}
+	}
+
+	return nullptr;
+}
+
+const CNewsEntry* CNewsFeed::FindEntryByUniqueId(const std::string& InUniqueId) const
+{
+	for (const CNewsEntry& Entry : Entries)
+	{
+		if (Entry.UniqueId == InUniqueId)
+			return &Entry;
+	}
+
+	return nullptr;
+}
+
+void CNewsFeed::ParseOutlineElementFromOpml(tinyxml2::XMLElement* Element)
+{
+	bDeleted = (Element->GetAttribute("bDeleted", 0) == 1);
+	Url = Element->GetAttribute("xmlUrl", "");
+	// std::cout << NewsFeed.Url << std::endl;
+	Title = Element->GetAttribute("title", Element->GetAttribute("text", ""));
+	UniqueId = Element->GetAttribute("UniqueId", Url.c_str());
+	bIsFolder = Url.empty();
+	XmlElement = Element;
+	LastEntryTime = Element->GetAttribute("LastEntryTime", 0);
+	bDisplayLastEntryFirst = (Element->GetAttribute("bDisplayLastEntryFirst", 1) != 0);
+	NbUnRead = Element->GetAttribute("NbUnRead", 0);
+	NbNew = Element->GetAttribute("NbNew", 0);
 }
 
 void CNewsFeed::ReadRss(tinyxml2::XMLDocument* XmlDoc)

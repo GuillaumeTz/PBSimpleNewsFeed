@@ -37,6 +37,9 @@ CApp::CApp()
 	NbDownloadFinished = 0;
 	NbTotalDownload = 0;
 	bSyncAllInProgress = false;
+
+	MainPage = new CUiMainPage();
+	SettingsPage = new CUiSettingsPage();
 }
 
 CApp* CApp::Singleton = NULL;
@@ -186,29 +189,29 @@ void CApp::msg(const char *s)
 
 int CApp::App_Handler(int type, int par1, int par2)
 {
-	//std::cerr << "Received " << type << " " << par1 << " " << par2;
+	std::cout << "Received " << type << " " << par1 << " " << par2;
 
 	if (type == EVT_INIT)
 	{
-		std::cerr << " INIT";
+		std::cout << " INIT";
 		CApp::Get()->Init();
 	}
 
 	if (type == EVT_EXIT)
 	{
-		std::cerr << " EXIT";
+		std::cout << " EXIT";
 		CApp::Get()->QuitApplication();
 	}
 
 	if (type == EVT_BACKGROUND)
 	{
-		std::cerr << " BACKGROUND";
+		std::cout << " BACKGROUND";
 		CApp::Get()->Save();
 	}
 
 	if (type == EVT_SHOW || type == EVT_REPAINT) 
 	{
-		std::cerr << " SHOW";
+		std::cout << " SHOW ";
 		CApp::Get()->Draw();
 		FullUpdate();
 	}
@@ -256,7 +259,7 @@ int CApp::App_Handler(int type, int par1, int par2)
 		CApp::Get()->PreviousPage();
 	}
 
-	//std::cerr << std::endl;
+	std::cout << "Received end" << std::endl;
 
 	return 0;
 }
@@ -279,6 +282,8 @@ CApp* CApp::Get()
 
 void CApp::Init()
 {
+	std::cout << "CApp::Init" << std::endl;
+
 #ifndef IVSAPP
 	iv_unlink(APP_FOLDER "/Error.txt");
 	ErrorFile.open(APP_FOLDER "/Error.txt");
@@ -290,19 +295,33 @@ void CApp::Init()
 	iv_buildpath(CACHE_FOLDER "/");
 	CDownloadManager::Get()->Init();
 
-	// Check if we need to reimport newly opml file
-	FeedList.LoadDocument(AppSettings.PathToSavedOPML);
+	// synchronize saved opml to potentially new opml
+	CFeedList OldFeedList;
+	OldFeedList.LoadDocument(AppSettings.PathToSavedOPML);
 
-	CFeedList OriginalOPMLFile;
-	OriginalOPMLFile.LoadDocument(AppSettings.PathToOPML);
+	FeedList.LoadDocument(AppSettings.PathToOPML);
 
-	CFeedList LastImportedOPMLFile;
-	LastImportedOPMLFile.LoadDocument(AppSettings.PathToLastImportedOPML);
+	// add / remove elements
+	std::vector<CNewsFeed*> Feeds;
+	Feeds.push_back(&FeedList.RootFeed);
+	for (int Index = 0; Index < Feeds.size(); ++Index)
+	{
+		CNewsFeed* Feed = Feeds[Index];
+		const CNewsFeed* OldFeed = OldFeedList.FindFeedByUniqueId(Feed->UniqueId);
+		if (OldFeed)
+		{
+			// transfer saved informations
+			Feed->TransferFromOldFeed(*OldFeed);
+		}
 
-
+		for (CNewsFeed& Child : Feed->NewsFeeds)
+		{
+			Feeds.push_back(&Child);
+		}
+	}
 
 	Viewport.RemoveAllOverlayWidgets();
-	Viewport.AddOverlayWidget(&MainPage);
+	Viewport.AddOverlayWidget(*MainPage);
 
 	if (AppSettings.bSynchronizeAtStart)
 	{
@@ -310,13 +329,18 @@ void CApp::Init()
 	}
 	else
 	{
-		MainPage.Refresh();
+		// Load all feeds if available
+		// FeedList.LoadFeeds(true);
+
+		MainPage->Refresh();
 		SHistoryItem Item;
 		History.push(Item);
 	}
 
 	//CDownload Download("http://request.urih.com/", CACHE_FOLDER "/requestheaders.html");
 	//CDownloadManager::Get()->AddDownload(Download);
+
+	std::cout << "CApp::Init end" << std::endl;
 }
 
 void CApp::SyncAll()
@@ -364,9 +388,9 @@ void CApp::Sync(std::vector<int> FeedPath)
 	DownloadGroup.OnGroupFinished = std::tr1::bind(&CApp::OnSyncFinished, this, FeedPath);
 	CDownloadManager::Get()->AddDownloadGroup(DownloadGroup, true);
 
-	MainPage.RefreshDownloadCounter();
+	MainPage->RefreshDownloadCounter();
 	Draw(false);
-	Viewport.PartialUpdateForWidget(MainPage.DownloadCounterText);
+	Viewport.PartialUpdateForWidget(MainPage->DownloadCounterText);
 }
 
 void CApp::DLReaderMode()
@@ -480,7 +504,7 @@ void CApp::OnDownloadStarted()
 void CApp::OnDownloadFinished()
 {
 	NbDownloadFinished++;
-	MainPage.RefreshDownloadCounter();
+	MainPage->RefreshDownloadCounter();
 
 	if ((NbDownloadFinished % 10) == 0)
 	{
@@ -493,7 +517,7 @@ void CApp::OnDownloadFinished()
 	if ((NbDownloadFinished % 50) == 0 || (NbDownloadFinished == NbTotalDownload))
 	{
 		Draw(false);
-		Viewport.PartialUpdateForWidget(MainPage.DownloadCounterText);
+		Viewport.PartialUpdateForWidget(MainPage->DownloadCounterText);
 	}
 }
 
@@ -531,9 +555,9 @@ void CApp::OnSyncFinished(std::vector<int> FeedPath)
 	DownloadGroup.OnGroupFinished = std::tr1::bind(&CApp::OnAdditionalSyncFinished, this, FeedPath);
 	CDownloadManager::Get()->AddDownloadGroup(DownloadGroup, false);
 
-	MainPage.RefreshDownloadCounter();
+	MainPage->RefreshDownloadCounter();
 	Draw(false);
-	Viewport.PartialUpdateForWidget(MainPage.DownloadCounterText);
+	Viewport.PartialUpdateForWidget(MainPage->DownloadCounterText);
 }
 
 void CApp::OnAdditionalSyncFinished(std::vector<int> FeedPath)
@@ -557,8 +581,8 @@ void CApp::OpenMainPage()
 	std::cerr << "OpenMainPage" << std::endl;
 	ClearScreen();
 	Viewport.RemoveAllOverlayWidgets();
-	Viewport.AddOverlayWidget(&MainPage);
-	MainPage.Refresh();
+	Viewport.AddOverlayWidget(*MainPage);
+	MainPage->Refresh();
 	Draw();
 
 	SHistoryItem Item;
@@ -586,12 +610,12 @@ void CApp::OpenFeed(std::vector<int> FeedPath, int PageIndex, bool bShowLastEntr
 			CUiLastEntries* LastEntries = new CUiLastEntries();
 			LastEntries->Refresh(FeedPath);
 			LastEntries->SetPageIndex(PageIndex);
-			MainPage.SetMainElement(LastEntries);
+			MainPage->SetMainElement(LastEntries);
 		}
 		else
 		{
 			CUiFeedList* FeedList = new CUiFeedList();
-			MainPage.SetMainElement(FeedList);
+			MainPage->SetMainElement(FeedList);
 			FeedList->SetPageIndex(PageIndex);
 			FeedList->Refresh(FeedPath);
 		}
@@ -599,13 +623,13 @@ void CApp::OpenFeed(std::vector<int> FeedPath, int PageIndex, bool bShowLastEntr
 	else
 	{
 		CUiFeedPage* FeedPage = new CUiFeedPage(); 
-		MainPage.SetMainElement(FeedPage);
+		MainPage->SetMainElement(FeedPage);
 		FeedPage->SetPageIndex(PageIndex);
 		FeedPage->SetFeed(FeedPath);
 	}
 
 	std::cerr << "OpenFeed draw " << std::endl;
-	MainPage.SetPath(FeedPath);
+	MainPage->SetPath(FeedPath);
 	Draw();
 
 	SHistoryItem Item(FeedPath);
@@ -627,11 +651,11 @@ void CApp::OpenEntry(std::vector<int> FeedPath, int EntryIndex, int PageIndex)
 	
 	ClearScreen();
 	CUiEntryPage* EntryPage = new CUiEntryPage();
-	MainPage.SetMainElement(EntryPage);
+	MainPage->SetMainElement(EntryPage);
 	EntryPage->SetPageIndex(PageIndex);
 	EntryPage->SetEntry(FeedPath, EntryIndex);
 
-	MainPage.SetPath(FeedPath);
+	MainPage->SetPath(FeedPath);
 	Draw();
 
 	SHistoryItem Item(FeedPath, EntryIndex);
@@ -657,8 +681,8 @@ void CApp::OpenReaderMode(std::vector<int> FeedPath, int EntryIndex)
 	const CNewsEntry& NewsEntry = Feed->Entries[EntryIndex];
 
 	CUiReaderModeBrowser* ReaderMode = new CUiReaderModeBrowser();
-	MainPage.SetMainElement(ReaderMode);
-	MainPage.SetPath(FeedPath);
+	MainPage->SetMainElement(ReaderMode);
+	MainPage->SetPath(FeedPath);
 	ReaderMode->ShowUrl(NewsEntry.Link, 0, false, Feed);
 
 	//Draw();
@@ -669,8 +693,8 @@ void CApp::OpenSettingsPage()
 {
 	std::cerr << "Open Settings Page" << std::endl;
 	Viewport.RemoveAllOverlayWidgets();
-	Viewport.AddOverlayWidget(&SettingsPage);
-	SettingsPage.Refresh();
+	Viewport.AddOverlayWidget(*SettingsPage);
+	SettingsPage->Refresh();
 
 	ClearScreen();
 	Draw();
@@ -685,7 +709,7 @@ void CApp::ShowFolders()
 		return;
 
 	CUiFeedList* FeedList = new CUiFeedList();
-	MainPage.SetMainElement(FeedList);
+	MainPage->SetMainElement(FeedList);
 	FeedList->SetPageIndex(HistItem.PageIndex);
 	FeedList->Refresh(HistItem.FeedPath);
 
@@ -706,7 +730,7 @@ void CApp::ShowLastEntries()
 	CUiLastEntries* LastEntries = new CUiLastEntries();
 	LastEntries->Refresh(HistItem.FeedPath);
 	LastEntries->SetPageIndex(HistItem.LastEntriesPageIndex);
-	MainPage.SetMainElement(LastEntries);
+	MainPage->SetMainElement(LastEntries);
 
 	ClearScreen();
 	Draw();
@@ -958,7 +982,7 @@ void CApp::SetFocusOn(CUiWidget* InFocusedWidget)
 
 void CApp::NextPage()
 {
-	CUiWidget* Widget = MainPage.GetMainElement();
+	CUiWidget* Widget = MainPage->GetMainElement();
 	if (Widget && Widget->As<CUiVerticalBox>() && Widget->As<CUiVerticalBox>()->CanNextPage())
 	{
 		Widget->As<CUiVerticalBox>()->NextPage();
@@ -990,7 +1014,7 @@ void CApp::NextPage()
 
 void CApp::PreviousPage()
 {
-	CUiWidget* Widget = MainPage.GetMainElement();
+	CUiWidget* Widget = MainPage->GetMainElement();
 	if (Widget && Widget->As<CUiVerticalBox>() && Widget->As<CUiVerticalBox>()->CanPreviousPage())
 	{
 		Widget->As<CUiVerticalBox>()->PreviousPage();

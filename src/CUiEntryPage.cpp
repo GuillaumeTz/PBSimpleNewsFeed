@@ -193,7 +193,6 @@ void CUiEntryPage::CalcDesiredSize(SVector2i AllowedSize)
 {
 	CUiVerticalBox::CalcDesiredSize(AllowedSize);
 
-	CApp* App = CApp::Get();
 	PageNumText->Text = CUtils::ToString(GetPageIndex() + 1) + "/" + CUtils::ToString(GetMaxPageIndex());
 }
 

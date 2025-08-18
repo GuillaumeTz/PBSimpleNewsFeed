@@ -23,10 +23,11 @@ CAppSettings::CAppSettings()
 {
 	MaxEntryToKeepByFeed = 200;
 	PathToOPML = FLASHDIR "/Dropbox PocketBook/subscriptions.opml";
-	PathToLastImportedOPML = APP_FOLDER "/lastImportedOPML.xml";
 	PathToSavedOPML = APP_FOLDER "/savedOPML.xml";
 	ConfigFilePath = APP_FOLDER "/config.xml";
 	bSynchronizeAtStart = false;
+	ResolutionWidth = ScreenWidth();
+	ResolutionHeight = ScreenHeight();
 }
 
 void CAppSettings::LoadConfig()
@@ -48,8 +49,35 @@ void CAppSettings::LoadConfig()
 				MaxEntryToKeepByFeed = atoi(Element->GetText());
 				std::cerr << "MaxEntryToKeepByFeed " << MaxEntryToKeepByFeed << std::endl;
 			}
+			if (tinyxml2::XMLElement* Element = XmlDoc.RootElement()->FirstChildElement("ResolutionWidth"))
+			{
+				ResolutionWidth = atoi(Element->GetText());
+				std::cerr << "ResolutionWidth " << ResolutionWidth << std::endl;
+			}
+			if (tinyxml2::XMLElement* Element = XmlDoc.RootElement()->FirstChildElement("ResolutionHeight"))
+			{
+				ResolutionHeight = atoi(Element->GetText());
+				ResolutionHeight = std::max(ResolutionHeight, 640);
+				std::cerr << "ResolutionHeight " << ResolutionHeight << std::endl;
+			}
 		}
 	}
+
+	if (ResolutionWidth <= 0)
+	{
+		ResolutionWidth = ScreenWidth(); 
+	}
+	if (ResolutionHeight <= 0)
+	{
+		ResolutionHeight = ScreenHeight();
+	}
+
+	ResolutionWidth = std::max(ResolutionWidth, 480);
+	ResolutionWidth = std::min(ResolutionWidth, ScreenWidth());
+	ResolutionHeight = std::max(ResolutionHeight, 640);
+	ResolutionHeight = std::min(ResolutionHeight, ScreenHeight());
+
+	std::cout << "Resolution : " << ResolutionWidth << " x " << ResolutionHeight << std::endl;
 
 	icanvas* Canvas = GetCanvas();
 	float CoeffWidth = float(Canvas->width) / 600.f;
@@ -89,6 +117,22 @@ void CAppSettings::SaveConfig()
 		tinyxml2::XMLElement* Element = XmlDoc.NewElement("MaxEntryToKeepByFeed");
 		std::stringstream stream;
 		stream << MaxEntryToKeepByFeed;
+		Element->InsertFirstChild(XmlDoc.NewText(stream.str().c_str()));
+		XmlDoc.RootElement()->InsertEndChild(Element);
+	}
+
+	{
+		tinyxml2::XMLElement* Element = XmlDoc.NewElement("ResolutionWidth");
+		std::stringstream stream;
+		stream << ResolutionWidth;
+		Element->InsertFirstChild(XmlDoc.NewText(stream.str().c_str()));
+		XmlDoc.RootElement()->InsertEndChild(Element);
+	}
+
+	{
+		tinyxml2::XMLElement* Element = XmlDoc.NewElement("ResolutionHeight");
+		std::stringstream stream;
+		stream << ResolutionHeight;
 		Element->InsertFirstChild(XmlDoc.NewText(stream.str().c_str()));
 		XmlDoc.RootElement()->InsertEndChild(Element);
 	}

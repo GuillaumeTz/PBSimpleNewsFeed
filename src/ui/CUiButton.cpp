@@ -50,7 +50,11 @@ void CUiButton::Draw(SUiDrawVisitor& DrawVisitor)
 			DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, Size.X, Size.Y + OffsetSizeY, 128);
 			DrawVisitor.HasDraw(this, SRect(DrawVisitor.AtLocation, DrawVisitor.AtLocation + Size + SVector2i(0, OffsetSizeY)));
 		}
+
+		//const SVector2i AtLocation = DrawVisitor.AtLocation;
+		//DrawVisitor.AtLocation += Child->Padding.TopLeft;
 		Child->Draw(DrawVisitor);
+		//DrawVisitor.AtLocation = AtLocation;
 
 		if (Visibility >= EUiWidgetVisibility::Visible)
 		{

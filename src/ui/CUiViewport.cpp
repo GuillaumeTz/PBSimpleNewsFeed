@@ -16,6 +16,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 #include "ui/CUiViewport.h"
 #include "ui/CUiOverlay.h"
+#include "CApp.h"
 
 #include "inkview.h"
 
@@ -102,10 +103,12 @@ void CUiViewport::Draw(bool bUpdate)
 	if (!BigZone.bIsValid)
 		return;
 
-	BigZone.Clamp(SVector2i(0), SVector2i(ScreenWidth(), ScreenHeight()));
+	BigZone.Clamp(SVector2i(0), DrawVisitor.ParentSize);
+	BigZone.Clamp(SVector2i(0), SVector2i(ScreenWidth() - 1, ScreenHeight() - 1));
 
-	PartialUpdate(BigZone.TopLeft.X, BigZone.TopLeft.Y, BigZone.BottomRight.X - BigZone.TopLeft.X, BigZone.BottomRight.Y - BigZone.TopLeft.Y);
 	std::cerr << "PartialUpdate " << BigZone.TopLeft.X << " " << BigZone.TopLeft.Y << " " << BigZone.BottomRight.X - BigZone.TopLeft.X << " " << BigZone.BottomRight.Y - BigZone.TopLeft.Y << std::endl;
+	PartialUpdate(BigZone.TopLeft.X, BigZone.TopLeft.Y, BigZone.BottomRight.X - BigZone.TopLeft.X, BigZone.BottomRight.Y - BigZone.TopLeft.Y);
+	std::cerr << "End PartialUpdate " << BigZone.TopLeft.X << " " << BigZone.TopLeft.Y << " " << BigZone.BottomRight.X - BigZone.TopLeft.X << " " << BigZone.BottomRight.Y - BigZone.TopLeft.Y << std::endl;
 }
 
 CUiWidget* CUiViewport::GetWidgetUnder(const SVector2i Coord) const

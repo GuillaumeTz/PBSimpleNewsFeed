@@ -28,20 +28,22 @@ void CUiSettingsPage::Refresh()
 
 	// Choose Opml file
 	{
+		CUiHorizontalBox* HorizontalBox = new CUiHorizontalBox();
+		HorizontalBox->bFill = true;
+		HorizontalBox->Padding.BottomRight.Y = 20;
+		VerticalBox->AddChild(HorizontalBox);
+
 		CUiText* Text = CUiTextAllocator::New();
 		Text->Text = "OPML file location : ";
-		VerticalBox->AddChild(Text);
+		HorizontalBox->AddChild(Text);
 
 		{
-			CUiButton* Button = new CUiButton();
-			//TODO make a real file selector dialog Button->OnPushFunction = std::tr1::bind(&CUiSettingsPage::SelectOpmlFile, this);
-			VerticalBox->AddChild(Button);
-
 			CUiText* OpmlFilePathText = CUiTextAllocator::New();
 			OpmlFilePathText->Text = LocalAppSettings.PathToOPML;
-			Button->Child = OpmlFilePathText;
-			Button->PivotPointRatio.X = 1.f;
-			Button->Padding.BottomRight.Y = 20;
+			OpmlFilePathText->SetEditable(true);
+			OpmlFilePathText->Type = UiTextFlags::Int;
+			OpmlFilePathText->OnEditedFunction = std::tr1::bind(&CUiSettingsPage::OnOpmlFilePathChanged, this, std::tr1::placeholders::_1);
+			HorizontalBox->AddChild(OpmlFilePathText);
 		}
 	}
 
@@ -69,11 +71,56 @@ void CUiSettingsPage::Refresh()
 		}
 	}
 
+	// Change resolution
+	{
+		{
+			CUiHorizontalBox* HorizontalBox = new CUiHorizontalBox();
+			HorizontalBox->bFill = true;
+			HorizontalBox->Padding.BottomRight.Y = 20;
+			VerticalBox->AddChild(HorizontalBox);
+
+			CUiText* Text = CUiTextAllocator::New();
+			Text->Text = "Screen Width : ";
+			HorizontalBox->AddChild(Text);
+
+			{
+				CUiText* MaxNumberText = CUiTextAllocator::New();
+				MaxNumberText->Text = CUtils::ToString(LocalAppSettings.ResolutionWidth);
+				MaxNumberText->SetEditable(true);
+				MaxNumberText->Type = UiTextFlags::Int;
+				MaxNumberText->OnEditedFunction = std::tr1::bind(&CUiSettingsPage::OnResolutionWidthChanged, this, std::tr1::placeholders::_1);
+				MaxNumberText->PivotPointRatio.X = 1.f;
+				HorizontalBox->AddChild(MaxNumberText);
+			}
+		}
+
+		{
+			CUiHorizontalBox* HorizontalBox = new CUiHorizontalBox();
+			HorizontalBox->bFill = true;
+			HorizontalBox->Padding.BottomRight.Y = 20;
+			VerticalBox->AddChild(HorizontalBox);
+
+			CUiText* Text = CUiTextAllocator::New();
+			Text->Text = "Screen Height : ";
+			HorizontalBox->AddChild(Text);
+
+			{
+				CUiText* MaxNumberText = CUiTextAllocator::New();
+				MaxNumberText->Text = CUtils::ToString(LocalAppSettings.ResolutionHeight);
+				MaxNumberText->SetEditable(true);
+				MaxNumberText->Type = UiTextFlags::Int;
+				MaxNumberText->OnEditedFunction = std::tr1::bind(&CUiSettingsPage::OnResolutionHeightChanged, this, std::tr1::placeholders::_1);
+				MaxNumberText->PivotPointRatio.X = 1.f;
+				HorizontalBox->AddChild(MaxNumberText);
+			}
+		}
+	}
+
 	{ // Clear cache
 		CUiButton* Button = new CUiButton();
 		Button->OnPushFunction = std::tr1::bind(&CUiSettingsPage::ClearCache, this);
 		Button->PivotPointRatio.X = 1.f;
-		//VerticalBox->AddChild(Button);
+		VerticalBox->AddChild(Button);
 
 		CUiText* Text = CUiTextAllocator::New();
 		Text->Text = "CLEAR CACHE";
@@ -117,7 +164,7 @@ static void OnSelectOpmlFileComplete(char* Filepath)
 	CUiSettingsPage* SettingsPageLocal = SettingsPage;
 	SettingsPage = NULL;
 
-	std::cout << "Selected opml file complete : " << Filepath << std::endl;
+	SettingsPageLocal->OnSelectedOpmlFile(Filepath);
 }
 
 void CUiSettingsPage::SelectOpmlFile()
@@ -125,18 +172,34 @@ void CUiSettingsPage::SelectOpmlFile()
 	SettingsPage = this;
 	char* Buffer = new char[4096];
 	memset(Buffer, 0, sizeof(char) * 4096);
-	OpenDirectorySelector("Selet OMPL File", Buffer, 4095, &OnSelectOpmlFileComplete);
+	memcpy(Buffer, LocalAppSettings.PathToOPML.c_str(), LocalAppSettings.PathToOPML.size());
+	OpenDirectorySelector("Select OMPL File", Buffer, 4095, &OnSelectOpmlFileComplete);
 }
 
 void CUiSettingsPage::OnSelectedOpmlFile(char* SelectedFile)
 {
-	
+	std::cout << "Selected opml file complete : " << SelectedFile << std::endl;
 }
 
 void CUiSettingsPage::OnMaxEntryToKeepChanged(CUiText* Text)
 {
 	LocalAppSettings.MaxEntryToKeepByFeed = atoi(Text->Text.c_str());
 	LocalAppSettings.MaxEntryToKeepByFeed = LocalAppSettings.MaxEntryToKeepByFeed < 1 ? 1 : LocalAppSettings.MaxEntryToKeepByFeed;
+}
+
+void CUiSettingsPage::OnResolutionWidthChanged(CUiText* Text)
+{
+	LocalAppSettings.ResolutionWidth = std::max(480, atoi(Text->Text.c_str()));
+}
+
+void CUiSettingsPage::OnResolutionHeightChanged(CUiText* Text)
+{
+	LocalAppSettings.ResolutionHeight = std::max(640, atoi(Text->Text.c_str()));
+}
+
+void CUiSettingsPage::OnOpmlFilePathChanged(CUiText* Text)
+{
+	LocalAppSettings.PathToOPML = Text->Text;
 }
 
 void CUiSettingsPage::Save()

@@ -201,6 +201,7 @@ void CUiText::CalcDesiredSize(SVector2i AllowedSize)
 	}
 
 	DesiredSize.X = std::max(CurrentSize, DesiredSize.X);
+	DesiredSize.Y += GetPaddingAlongY();
 }
 
 void CUiText::Draw(SUiDrawVisitor& DrawVisitor)
@@ -269,8 +270,12 @@ static void OnTextEdited(char* Text)
 	if (!TextForKeyboard)
 		return;
 
+	std::cerr << "OnTextEdited " << Text << std::endl;
 	CUiText* TextForKeyboardLocal = TextForKeyboard;
 	TextForKeyboard = NULL;
+
+	CloseKeyboard();
+
 	TextForKeyboardLocal->OnEdited(Text);
 }
 
@@ -278,15 +283,15 @@ void CUiText::OnClick()
 {
 	char* Buffer = new char[2048];
 	memset(Buffer, 0, sizeof(char) * 2048);
+	memcpy(Buffer, Text.c_str(), Text.size());
 	TextForKeyboard = this;
-	OpenKeyboard("", Buffer, 2047, 0, &OnTextEdited);
+	OpenKeyboard("Modify value", Buffer, 2047, 0, &OnTextEdited);
 }
 
 void CUiText::OnEdited(char* InText)
 {
 	//transform to int
 	std::string NewText = InText;
-	delete[] InText;
 
 	//try to validate input
 	bool bIsValid = true;
@@ -312,4 +317,5 @@ void CUiText::OnEdited(char* InText)
 		OnEditedFunction(this);
 	}
 	CApp::Get()->RedrawWidget(this);
+	delete[] InText;
 }

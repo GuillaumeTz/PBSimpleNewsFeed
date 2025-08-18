@@ -16,6 +16,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 #include "CUiNewsFeedButton.h"
 #include "CApp.h"
+#include "ui/CUiText.h"
 
 #include <sstream>
 
@@ -38,7 +39,7 @@ void CUiNewsFeedButton::Delete()
 {
 	CApp* App = CApp::Get();
 	CNewsFeed* NewsFeed = App->GetFeed(CurrentPath);
-	NewsFeed->MarkAsDeleted();
+	NewsFeed->bDeleted = true;
 	CurrentPath.clear();
 	TSharedPtr<CUiNewsFeedButton> ThisShared = this;
 	if (Parent)

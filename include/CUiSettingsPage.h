@@ -21,6 +21,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 #include "CAppSettings.h"
 
 class CUiText;
+class CUiButton;
 
 class CUiSettingsPage : public CUiHorizontalBox
 {
@@ -33,6 +34,9 @@ public:
 
 	void OnMaxEntryToKeepChanged(CUiText* Text);
 
+	void OnResolutionWidthChanged(CUiText* Text);
+	void OnResolutionHeightChanged(CUiText* Text);
+	void OnOpmlFilePathChanged(CUiText* Text);
 	void Save();
 	void Cancel();
 	void ClearCache();

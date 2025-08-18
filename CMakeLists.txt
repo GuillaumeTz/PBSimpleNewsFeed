@@ -22,6 +22,8 @@ ELSE ()
 ENDIF (PLATFORM STREQUAL "NX")
 #SET (CMAKE_VERBOSE_MAKEFILE ON)
 
+MESSAGE (STATUS "TARGET_TYPE ${TARGET_TYPE}")
+
 IF (NOT TARGET_TYPE)
 	SET (TARGET_TYPE Linux)
 ENDIF (NOT TARGET_TYPE)
@@ -45,7 +47,9 @@ IF (TARGET_TYPE STREQUAL "ARM")
 	SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib_arm)
 	SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib_arm)
 	SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin_arm)
-ELSE()
+ENDIF(TARGET_TYPE STREQUAL "ARM")
+
+IF (TARGET_TYPE STREQUAL "Linux")
 	SET(CMAKE_INSTALL_PREFIX "${TOOLCHAIN_PATH}" CACHE PATH "Install path prefix" FORCE)
 
 	FIND_PACKAGE (Freetype REQUIRED)
@@ -63,7 +67,7 @@ ELSE()
 	SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin_pc)
 	
 	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Dpng_set_gray_1_2_4_to_8=png_set_expand_gray_1_2_4_to_8" )
-ENDIF(TARGET_TYPE STREQUAL "ARM")
+ENDIF(TARGET_TYPE STREQUAL "Linux")
 
 MESSAGE (STATUS "Using ${TOOLCHAIN_PATH}")
 
@@ -83,8 +87,8 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 	IF (TARGET_TYPE STREQUAL "ARM")
 		MESSAGE (STATUS "Build for ARM Debug")
-		SET (CMAKE_C_FLAGS_DEBUG "-DDEBUG -fsigned-char -W -Wall -Wextra -Wno-format-y2k -fomit-frame-pointer -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -std=c++11 -O0 -g3")
-		SET (CMAKE_CXX_FLAGS_DEBUG "-DDEBUG -fsigned-char -W -Wall -Wextra -Wno-format-y2k -fomit-frame-pointer -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -std=c++11 -O0 -g3")
+		SET (CMAKE_C_FLAGS_DEBUG "-DDEBUG -fsigned-char -W -Wall -Wextra -Wno-format-y2k -fomit-frame-pointer -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -std=c++11 -std=c99 -O0 -g3")
+		SET (CMAKE_CXX_FLAGS_DEBUG "-DDEBUG -fsigned-char -W -Wall -Wextra -Wno-format-y2k -fomit-frame-pointer -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -std=c++11 -std=c99 -O0 -g3")
 	ENDIF (TARGET_TYPE STREQUAL "ARM")
 
 ELSE ()
@@ -103,8 +107,8 @@ ELSE ()
 
 	IF (TARGET_TYPE STREQUAL "ARM")
 		MESSAGE (STATUS "Build for ARM Release")
-		SET (CMAKE_C_FLAGS_RELEASE "-DNDEBUG -s -fsigned-char -Wall -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -std=c++11 -O2 -Wno-format-y2k -fomit-frame-pointer")
-		SET (CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -s -fsigned-char -Wall -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -std=c++11 -O2 -Wno-format-y2k -fomit-frame-pointer")
+		SET (CMAKE_C_FLAGS_RELEASE "-DNDEBUG -s -fsigned-char -Wall -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -std=c++11 -std=c99 -O2 -Wno-format-y2k -fomit-frame-pointer")
+		SET (CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -s -fsigned-char -Wall -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -std=c++11 -std=c99 -O2 -Wno-format-y2k -fomit-frame-pointer")
 	ENDIF (TARGET_TYPE STREQUAL "ARM")
 
 ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")

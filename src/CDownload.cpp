@@ -97,7 +97,7 @@ void* CDownload::DownloadThread(void* Data)
 		//    curl_easy_setopt(curl, CURLOPT_POSTFIELDS,postparamstring.c_str());
 		//}
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST,  2);
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (X11; Linux i686; rv:78.0) Gecko/20100101 SimpleNewsFeed/0.1");
+		curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (X11; Linux i686; rv:78.0) Gecko/20100101 PBSimpleNewsFeed/0.1");
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);  // this line makes it work under https
 		//curl_easy_setopt(curl, CURLOPT_COOKIEFILE, LIB_CURL_COOKIES_FILE);//read from
 		//curl_easy_setopt(curl, CURLOPT_COOKIEJAR, LIB_CURL_COOKIES_FILE); //write to
