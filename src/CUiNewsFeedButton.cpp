@@ -20,6 +20,11 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 #include <sstream>
 
+CUiNewsFeedButton::CUiNewsFeedButton() : CUiButton()
+{
+	DebugName = "UiNewsFeedButton";
+}
+
 void CUiNewsFeedButton::SetFeed(const std::vector<int>& FeedPath)
 {
 	CurrentPath = FeedPath;

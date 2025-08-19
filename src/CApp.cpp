@@ -189,7 +189,7 @@ void CApp::msg(const char *s)
 
 int CApp::App_Handler(int type, int par1, int par2)
 {
-	std::cout << "Received " << type << " " << par1 << " " << par2;
+	// std::cout << "Received " << type << " " << par1 << " " << par2;
 
 	if (type == EVT_INIT)
 	{
@@ -259,7 +259,7 @@ int CApp::App_Handler(int type, int par1, int par2)
 		CApp::Get()->PreviousPage();
 	}
 
-	std::cout << "Received end" << std::endl;
+	// std::cout << "Received end" << std::endl;
 
 	return 0;
 }
@@ -323,6 +323,8 @@ void CApp::Init()
 	Viewport.RemoveAllOverlayWidgets();
 	Viewport.AddOverlayWidget(*MainPage);
 
+	OpenMainPage();
+
 	if (AppSettings.bSynchronizeAtStart)
 	{
 		SyncAll();
@@ -331,10 +333,6 @@ void CApp::Init()
 	{
 		// Load all feeds if available
 		// FeedList.LoadFeeds(true);
-
-		MainPage->Refresh();
-		SHistoryItem Item;
-		History.push(Item);
 	}
 
 	//CDownload Download("http://request.urih.com/", CACHE_FOLDER "/requestheaders.html");
@@ -583,6 +581,12 @@ void CApp::OpenMainPage()
 	Viewport.RemoveAllOverlayWidgets();
 	Viewport.AddOverlayWidget(*MainPage);
 	MainPage->Refresh();
+
+	CUiFeedList* FeedList = new CUiFeedList();
+	MainPage->SetMainElement(FeedList);
+	FeedList->SetPageIndex(0);
+	FeedList->Refresh({});
+
 	Draw();
 
 	SHistoryItem Item;
@@ -983,6 +987,10 @@ void CApp::SetFocusOn(CUiWidget* InFocusedWidget)
 void CApp::NextPage()
 {
 	CUiWidget* Widget = MainPage->GetMainElement();
+	if (Widget && Widget->As<CUiVerticalBox>() && Widget->As<CUiVerticalBox>())
+	{
+		std::cout << "CanNext page " << Widget << " " << Widget->As<CUiVerticalBox>()->GetPageIndex() << " / " << Widget->As<CUiVerticalBox>()->GetMaxPageIndex() << std::endl;
+	}
 	if (Widget && Widget->As<CUiVerticalBox>() && Widget->As<CUiVerticalBox>()->CanNextPage())
 	{
 		Widget->As<CUiVerticalBox>()->NextPage();

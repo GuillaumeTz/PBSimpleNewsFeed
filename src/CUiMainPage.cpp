@@ -32,8 +32,11 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 CUiMainPage::CUiMainPage() : CUiOverlay()
 {
 	BreadcrumbHBox = NULL;
+	MainVerticalBox = NULL;
 	DownloadCounterText = NULL;
 	bFill = true;
+
+	DebugName = "UIMainPage";
 }
 
 void CUiMainPage::Refresh()
@@ -42,14 +45,17 @@ void CUiMainPage::Refresh()
 	CApp* App = CApp::Get();
 
 	ClearChildren();
-	AddChild(new CUiVerticalBox());
-	CUiVerticalBox* VerticalBox = dynamic_cast<CUiVerticalBox*>((*GetChildren())[0].Get());
-	VerticalBox->Padding.TopLeft.X = 20;
-	VerticalBox->Padding.BottomRight.X = 20;
+	MainVerticalBox = new CUiVerticalBox();
+	MainVerticalBox->DebugName = "MainPageVBox";
+	AddChild(MainVerticalBox);
+	MainVerticalBox->Padding.TopLeft.X = 20;
+	MainVerticalBox->Padding.BottomRight.X = 20;
+	MainVerticalBox->Padding.BottomRight.Y = 10;
 
 	// add header bar
 	{
 		CUiHorizontalBox* HeaderBarHBox = new CUiHorizontalBox();
+		HeaderBarHBox->DebugName = "HeaderBarHBox";
 		HeaderBarHBox->bFill = true;
 
 		{
@@ -106,16 +112,18 @@ void CUiMainPage::Refresh()
 			HeaderBarHBox->AddChild(BackButton);
 		}
 
-		HeaderBarHBox->Padding.BottomRight.Y = 20;
-		VerticalBox->AddChild(HeaderBarHBox);
+		HeaderBarHBox->Padding.BottomRight.Y = 10;
+		MainVerticalBox->AddChild(HeaderBarHBox);
 	}
 
 	{
 		CUiVerticalBox* VertBox = new CUiVerticalBox();
-		VerticalBox->AddChild(VertBox);
+		VertBox->DebugName = "DetailsVertBox";
+		MainVerticalBox->AddChild(VertBox);
 
 		{
 			CUiHorizontalBox* HorizontalBox = new CUiHorizontalBox();
+			HorizontalBox->DebugName = "BredCrumbHBox";
 			HorizontalBox->bFill = true;
 			HorizontalBox->Padding.BottomRight.Y = 5;
 			VertBox->AddChild(HorizontalBox);
@@ -135,7 +143,8 @@ void CUiMainPage::Refresh()
 		
 		{
 			CUiHorizontalBox* HorizontalBox = new CUiHorizontalBox();
-			HorizontalBox->Padding.BottomRight.Y = 10;
+			HorizontalBox->DebugName = "FoldersHBox";
+			HorizontalBox->Padding.BottomRight.Y = 5;
 			VertBox->AddChild(HorizontalBox);
 
 			{
@@ -172,14 +181,10 @@ void CUiMainPage::Refresh()
 		}
 
 		CUiLine* Line = CUiLineAllocator::New();
-		Line->Padding.BottomRight.Y = 15;
+		Line->Padding.BottomRight.Y = 10;
 		VertBox->AddChild(Line);
 	}
 
-	CUiFeedList* FeedList = new CUiFeedList();
-	std::vector<int> Path; 
-	FeedList->Refresh(Path);
-	SetMainElement(FeedList);
 	SetPath({});
 
 	std::cerr << "End Main Page Refresh" << std::endl;
@@ -203,32 +208,21 @@ void CUiMainPage::RefreshDownloadCounter()
 
 void CUiMainPage::SetMainElement(CUiWidget* Widget)
 {
-	if (GetChildren()->empty())
-	{
-		AddChild(new CUiVerticalBox());
-	}
+	if (!MainVerticalBox)
+		return;
 
-	CUiVerticalBox* VerticalBox = dynamic_cast<CUiVerticalBox*>((*GetChildren())[0].Get());
-
-	if (VerticalBox->GetChildren()->size() > 2)
-	{
-		VerticalBox->RemoveChildAt(2);
-	}
-
-	VerticalBox->AddChild(Widget);
+	MainVerticalBox->GetChildren()->resize(2);
+	MainVerticalBox->AddChild(Widget);
 }
 
 CUiWidget* CUiMainPage::GetMainElement()
 {
-	if (GetChildren()->empty())
-	{
+	if (!MainVerticalBox)
 		return NULL;
-	}
 
-	CUiVerticalBox* VerticalBox = dynamic_cast<CUiVerticalBox*>((*GetChildren())[0].Get());
-	if ((*VerticalBox->GetChildren()).size() > 2)
+	if ((*MainVerticalBox->GetChildren()).size() > 2)
 	{
-		return (*VerticalBox->GetChildren())[2].Get();
+		return (*MainVerticalBox->GetChildren())[2].Get();
 	}
 	return NULL;
 }

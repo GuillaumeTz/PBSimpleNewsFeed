@@ -41,12 +41,18 @@ struct SFeedInfo
 	}
 };
 
-void CUiFeedList::Refresh(const std::vector<int>& InPath, int IndexPage)
+CUiFeedList::CUiFeedList() : CUiVerticalBox()
+{
+	bSupportMultiplePages = true;
+
+	DebugName = "UiFeedList";
+}
+
+void CUiFeedList::Refresh(const std::vector<int>& InPath)
 {
 	CApp* App = CApp::Get();
 
 	CurrentPath = InPath;
-	CurrentPageIndex = IndexPage;
 	
 	ClearChildren();
 

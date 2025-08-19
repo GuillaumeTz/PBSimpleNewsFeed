@@ -65,14 +65,14 @@ void CUiViewport::Draw(bool bUpdate)
 
 	ClearScreen();
 	DrawVisitor = SUiDrawVisitor();
-	DrawVisitor.ParentSize.X = ScreenWidth();
-	DrawVisitor.ParentSize.Y = ScreenHeight();
-	DrawVisitor.ParentSize -= RootWidget->GetPaddingSize();
+	DrawVisitor.AllowedSize.X = ScreenWidth();
+	DrawVisitor.AllowedSize.Y = ScreenHeight() - PanelHeight();
+	DrawVisitor.AllowedSize -= RootWidget->GetPaddingSize();
 	DrawVisitor.AtLocation = RootWidget->Padding.TopLeft;
 
 	//DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DrawVisitor.ParentSize.X, DrawVisitor.ParentSize.Y, 128);
 
-	RootWidget->CalcDesiredSize(DrawVisitor.ParentSize);
+	RootWidget->CalcDesiredSize(DrawVisitor.AllowedSize);
 	RootWidget->Draw(DrawVisitor);
 
 	if (!bUpdate)
@@ -103,7 +103,7 @@ void CUiViewport::Draw(bool bUpdate)
 	if (!BigZone.bIsValid)
 		return;
 
-	BigZone.Clamp(SVector2i(0), DrawVisitor.ParentSize);
+	BigZone.Clamp(SVector2i(0), DrawVisitor.AllowedSize);
 	BigZone.Clamp(SVector2i(0), SVector2i(ScreenWidth() - 1, ScreenHeight() - 1));
 
 	std::cerr << "PartialUpdate " << BigZone.TopLeft.X << " " << BigZone.TopLeft.Y << " " << BigZone.BottomRight.X - BigZone.TopLeft.X << " " << BigZone.BottomRight.Y - BigZone.TopLeft.Y << std::endl;

@@ -72,6 +72,13 @@ void ParseNewsFeed(const CNewsFeed* InNewsFeed, std::vector<int>& InFeedPath, st
 	}
 }
 
+CUiLastEntries::CUiLastEntries() : CUiVerticalBox()
+{
+	bSupportMultiplePages = true;
+
+	DebugName = "UiLastEntries";
+}
+
 void CUiLastEntries::Refresh(const std::vector<int>& InFeedPath)
 {
 	CApp* App = CApp::Get();

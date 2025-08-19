@@ -18,6 +18,11 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 #include "inkview.h"
 
+CUiOverlay::CUiOverlay() : CUiCompositeWidget()
+{
+	DebugName = "UiOverlay";
+}
+
 void CUiOverlay::CalcDesiredSize(SVector2i AllowedSize)
 {
 	CUiCompositeWidget::CalcDesiredSize(AllowedSize);
@@ -34,7 +39,7 @@ void CUiOverlay::CalcDesiredSize(SVector2i AllowedSize)
 
 void CUiOverlay::Draw(SUiDrawVisitor& DrawVisitor)
 {
-	const SVector2i OriginalParentSize = DrawVisitor.ParentSize;
+	const SVector2i OriginalParentSize = DrawVisitor.AllowedSize;
 	const SVector2i OriginalLocation = DrawVisitor.AtLocation;
 
 	for (int Index = 0; Index < (*GetChildren()).size(); ++Index)
@@ -42,11 +47,11 @@ void CUiOverlay::Draw(SUiDrawVisitor& DrawVisitor)
 		CUiWidget* Widget = (*GetChildren())[Index].Get();
 
 		DrawVisitor.AtLocation = OriginalLocation + Widget->Padding.TopLeft;
-		DrawVisitor.ParentSize = OriginalParentSize - Widget->GetPaddingSize();
+		DrawVisitor.AllowedSize = OriginalParentSize - Widget->GetPaddingSize();
 
 		Widget->Draw(DrawVisitor);
 	}
 
 	DrawVisitor.AtLocation = OriginalLocation;
-	DrawVisitor.ParentSize = OriginalParentSize;
+	DrawVisitor.AllowedSize = OriginalParentSize;
 }

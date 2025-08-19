@@ -31,11 +31,14 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 CUiReaderModeBrowser::CUiReaderModeBrowser() : CUiVerticalBox()
 {
+	bSupportMultiplePages = true;
 	Feed = nullptr;
 	bIsDownloading = false;
 	Feed = NULL;
 	RefreshButton = NULL;
 	BackButton = NULL;
+
+	DebugName = "UiReaderModeBrowser";
 }
 
 void CUiReaderModeBrowser::ShowUrl(const std::string& InUrl, int InPageIndex, bool bForceDownload, CNewsFeed* InFeed)
@@ -98,7 +101,7 @@ void CUiReaderModeBrowser::ShowUrl(const std::string& InUrl, int InPageIndex, bo
 			{
 				RefreshButton = new CUiButton();
 				CUiText* Text = CUiTextAllocator::New();
-				Text->Font = App->AppSettings.EntryTextFont;
+				Text->Font = App->AppSettings.EntryTextFontBold;
 				Text->Text = "Refresh";
 				RefreshButton->Child = Text;
 				RefreshButton->OnPushFunction = std::tr1::bind(&CUiReaderModeBrowser::Refresh, this);

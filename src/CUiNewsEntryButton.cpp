@@ -24,6 +24,8 @@ CUiNewsEntryButton::CUiNewsEntryButton() : CUiButton()
 {
 	CurrentEntryIndex = -1;
 	bHasBeenDrawn = false;
+
+	DebugName = "UiNewsEntryButton";
 }
 
 void CUiNewsEntryButton::SetEntry(const std::vector<int>& FeedPath, int EntryIndex, const std::string& Tag)

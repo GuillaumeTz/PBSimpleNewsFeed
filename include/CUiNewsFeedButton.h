@@ -24,6 +24,8 @@ class CUiText;
 class CUiNewsFeedButton : public CUiButton
 {
 public:
+	CUiNewsFeedButton();
+
 	void SetFeed(const std::vector<int>& FeedPath);
 	void MarkAsRead();
 	void Delete();

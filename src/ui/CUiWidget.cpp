@@ -24,7 +24,7 @@ SUiDrawVisitor::SUiDrawVisitor()
 	MaxAllowedHeight = INT_MAX;
 }
 
-void SUiDrawVisitor::HasDraw(CUiWidget* InWidget, const SRect& DrawZone)
+void SUiDrawVisitor::MarkHasDrawn(CUiWidget* InWidget, const SRect& DrawZone)
 {
 	DirtyZones[InWidget] = DrawZone;
 	VisibleZones[InWidget] = DrawZone;
@@ -103,7 +103,7 @@ void CUiCompositeWidget::CalcDesiredSize(SVector2i AllowedSize)
 
 CUiWidget::CUiWidget() : Parent(nullptr), PivotPointRatio(0.f, 0.f), Visibility(EUiWidgetVisibility::VisibleNotInteractable), bNeedRedraw(true), bFill(false), bIsPushed(false)
 {
-
+	DebugName = "Widget";
 }
 
 CUiWidget::~CUiWidget()

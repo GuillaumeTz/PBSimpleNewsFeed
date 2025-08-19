@@ -22,6 +22,8 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 class CUiLastEntries : public CUiVerticalBox
 {
 public:
+	CUiLastEntries();
+
 	void Refresh(const std::vector<int>& FeedPath);
 	void OnOpenEntry(class CUiButton* Button, std::vector<int> FeedPath, int EntryIndex);
 };

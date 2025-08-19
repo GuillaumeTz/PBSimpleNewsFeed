@@ -15,6 +15,8 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 */
 
 #include "ui/CUiVerticalBox.h"
+#include "ui/CUiText.h"
+#include "CApp.h"
 
 #include "inkview.h"
 
@@ -24,12 +26,10 @@ CUiVerticalBox::CUiVerticalBox() : CUiCompositeWidget()
 {
 	CurrentPage = 0;
 	MaxPage = 1;
-#ifndef IVSAPP
-	MaxSize.Y = 1200;
-#else
-	MaxSize.Y = 600;
-#endif
-	bFill = true;
+	bFill = false;
+	bSupportMultiplePages = false;
+
+	DebugName = "VerticalBox";
 }
 
 CUiVerticalBox::~CUiVerticalBox()
@@ -41,34 +41,71 @@ void CUiVerticalBox::CalcDesiredSize(SVector2i AllowedSize)
 {
 	CUiCompositeWidget::CalcDesiredSize(AllowedSize);
 
-	int MinHeight = MaxSize.Y > 0 ? CurrentPage * MaxSize.Y : 0;
-	int MaxHeight = MaxSize.Y > 0 ? (CurrentPage + 1) * MaxSize.Y : INT_MAX;
-
-	int CurrentHeight = 0;
-	bool bHasDrawFirst = false;
-
-	for (int Index = 0; Index < (*GetChildren()).size(); ++Index)
+	bool bFirstPass = true;
+	bool bDirty = true;
+	while (bDirty)
 	{
-		CUiWidget* Widget = (*GetChildren())[Index].Get();
-		if (CurrentHeight >= MinHeight && (!bHasDrawFirst || (CurrentHeight /*+ Widget->DesiredSize.Y*/ <= MaxHeight)))
+		bDirty = false;
+
+		MaxPage = 1;
+		DesiredSize = SVector2i(0);
+
+		int CurrentHeight = 0;
+		bool bHasDrawnFirstInPage = false;
+
+		int LocalIndexPage = 0;
+		for (int Index = 0; Index < (*GetChildren()).size(); ++Index)
 		{
-			bHasDrawFirst = true;
-			DesiredSize.X = std::max(DesiredSize.X, Widget->DesiredSize.X + Widget->GetPaddingAlongX());
-			DesiredSize.Y += Widget->DesiredSize.Y + Widget->GetPaddingAlongY();
-		}
-		CurrentHeight += Widget->DesiredSize.Y + Widget->GetPaddingAlongY();
-	}
+			const int LocalIndexPageMinHeight = LocalIndexPage * AllowedSize.Y;
+			const int LocalIndexPageMaxHeight = (LocalIndexPage + 1) * AllowedSize.Y;
 
-	MaxPage = 1;
-	if (MaxSize.Y > 0)
-	{
-		DesiredSize.Y = std::min(MaxSize.Y, DesiredSize.Y);
-		MaxPage = (CurrentHeight / MaxSize.Y) + 1;
+			CUiWidget* Widget = (*GetChildren())[Index].Get();
+
+			if (CurrentHeight >= LocalIndexPageMaxHeight)
+			{
+				if (!bSupportMultiplePages)
+					break;
+
+				LocalIndexPage += 1;
+				--Index;
+				continue;
+			}
+
+			if (CurrentHeight + Widget->DesiredSize.Y >= LocalIndexPageMinHeight && (!bHasDrawnFirstInPage || CurrentHeight < LocalIndexPageMaxHeight))
+			{
+				SVector2i ChildAllowedSize = AllowedSize;
+				ChildAllowedSize.X = AllowedSize.X - Widget->GetPaddingAlongX();
+				ChildAllowedSize.Y = AllowedSize.Y - (CurrentHeight - LocalIndexPageMinHeight) - Widget->GetPaddingAlongY();
+				Widget->CalcDesiredSize(ChildAllowedSize);
+				std::cout << DebugName << " CalcDesiredSize for " << Widget->DebugName << " " << ChildAllowedSize.X << " " << ChildAllowedSize.Y << " DesiredSize " << Widget->DesiredSize.X << " " << Widget->DesiredSize.Y << " at Heigt " << CurrentHeight << std::endl;
+			}
+
+			if (CurrentHeight + Widget->DesiredSize.Y >= LocalIndexPageMinHeight && (!bHasDrawnFirstInPage || CurrentHeight < LocalIndexPageMaxHeight))
+			{
+				bHasDrawnFirstInPage = true;
+				DesiredSize.X = std::max(DesiredSize.X, Widget->DesiredSize.X + Widget->GetPaddingAlongX());
+				DesiredSize.Y += Widget->DesiredSize.Y + Widget->GetPaddingAlongY();
+			}
+
+			CurrentHeight += Widget->DesiredSize.Y + Widget->GetPaddingAlongY();
+		}
+
+		DesiredSize.Y = bFill ? AllowedSize.Y : std::min(AllowedSize.Y, DesiredSize.Y);
+		MaxPage = LocalIndexPage + 1;
+
+		if (bFirstPass && MaxPage > 1)
+		{
+			AllowedSize.Y -= 25;
+			bDirty = true;
+		}
+		bFirstPass = false;
 	}
+	std::cout << " MaxPage " << MaxPage << " " << this << std::endl;
 }
 
 void CUiVerticalBox::NextPage()
 {
+	std::cout << "NextPage" << std::endl;
 	CurrentPage = std::min(MaxPage - 1, CurrentPage + 1);
 }
 
@@ -94,73 +131,113 @@ bool CUiVerticalBox::CanPreviousPage() const
 
 void CUiVerticalBox::Draw(SUiDrawVisitor& DrawVisitor)
 {
-	const SVector2i OriginalParentSize = DrawVisitor.ParentSize;
+	const SVector2i OriginalAllowdSize = DrawVisitor.AllowedSize;
 	const SVector2i OriginalLocation = DrawVisitor.AtLocation;
-	const int MinHeight = MaxSize.Y > 0 ? CurrentPage * MaxSize.Y : 0;
-	const int MaxHeight = MaxSize.Y > 0 ? (CurrentPage + 1) * MaxSize.Y : INT_MAX;
-	const SVector2i ChildrenSize = DesiredSize;
-
-	/*DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DesiredSize.X, DesiredSize.Y, 0);
-	DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y,OriginalParentSize.X, OriginalParentSize.Y, 128);*/
-	//DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, OriginalParentSize.X, OriginalParentSize.Y, 128);
-
 	const int OldStartHeight = DrawVisitor.StartHeight;
-	DrawVisitor.StartHeight = 0;
-	int CurrentHeight = -OldStartHeight;
-	bool bHasDrawFirst = false;
+	const int OldMaxAllowedHeight = DrawVisitor.MaxAllowedHeight;
+
+	SVector2i PageSize = OriginalAllowdSize;
+	if (MaxPage > 1)
+	{
+		PageSize.Y -= 25;
+	}
+
+	if (MaxPage > 1)
+	{
+		//DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DesiredSize.X, DesiredSize.Y, 0);
+		DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, OriginalAllowdSize.X, OriginalAllowdSize.Y, 128);
+	}
+
+	int CurrentHeight = 0;
+	int LocalIndexPage = 0;
+	bool bHasDrawnFirstInPage = false;
+	CUiWidget* LastWidgetThatPossiblyNeedToBeDrawn = nullptr;
+	bool bJustDrawnLastWidget = false;
 	for (int Index = 0; Index < (*GetChildren()).size(); ++Index)
 	{
 		CUiWidget* Widget = (*GetChildren())[Index].Get();
-		if (CurrentHeight >= MaxHeight)
-			break;
 
-		DrawVisitor.ParentSize.Y = Widget->DesiredSize.Y;
-		if (bFill)
+		const int LocalIndexPageMinHeight = LocalIndexPage * PageSize.Y;
+		const int LocalIndexPageMaxHeight = (LocalIndexPage + 1) * PageSize.Y;
+
+		if (CurrentHeight >= LocalIndexPageMaxHeight)
 		{
-			DrawVisitor.ParentSize.X = OriginalParentSize.X - Widget->GetPaddingAlongX();
-		}
-		else
-		{
-			DrawVisitor.ParentSize.X = ChildrenSize.X - Widget->GetPaddingAlongX();
+			if (!bSupportMultiplePages)
+				break;
+
+			LocalIndexPage += 1;
+			if (LocalIndexPage > CurrentPage)
+				break;
+
+			--Index;
+			continue;
 		}
 
-		if (CurrentHeight < MinHeight && CurrentHeight + Widget->DesiredSize.Y > MinHeight)
+		bool bNeedToDraw = LocalIndexPage == CurrentPage;
+		if (LastWidgetThatPossiblyNeedToBeDrawn && CurrentHeight - (LastWidgetThatPossiblyNeedToBeDrawn->DesiredSize.Y + LastWidgetThatPossiblyNeedToBeDrawn->GetPaddingAlongY()) < LocalIndexPageMinHeight && CurrentHeight >= LocalIndexPageMinHeight)
 		{
-			bHasDrawFirst = true;
-			DrawVisitor.AtLocation.Y = OriginalLocation.Y + Widget->Padding.TopLeft.Y;
+			bNeedToDraw = true;
+			DrawLine(OriginalLocation.X, OriginalLocation.Y + CurrentHeight - LocalIndexPageMinHeight, OriginalLocation.X + PageSize.X, OriginalLocation.Y + CurrentHeight - LocalIndexPageMinHeight, 0);
+			CurrentHeight = CurrentHeight - LastWidgetThatPossiblyNeedToBeDrawn->DesiredSize.Y;
+			std::cerr << DebugName << " Need to draw last widget ! " << LastWidgetThatPossiblyNeedToBeDrawn->DebugName << " at " << CurrentHeight << std::endl;
+			DrawLine(OriginalLocation.X, OriginalLocation.Y + CurrentHeight - LocalIndexPageMinHeight, OriginalLocation.X + PageSize.X, OriginalLocation.Y + CurrentHeight - LocalIndexPageMinHeight, 0);
+			Widget = LastWidgetThatPossiblyNeedToBeDrawn;
+			--Index;
+			bJustDrawnLastWidget = true;
+		}
+
+		LastWidgetThatPossiblyNeedToBeDrawn = nullptr;
+		if (bNeedToDraw)
+		{
+			bHasDrawnFirstInPage = true;
+			DrawVisitor.AtLocation.Y = OriginalLocation.Y + CurrentHeight - LocalIndexPageMinHeight + Widget->Padding.TopLeft.Y;
 			DrawVisitor.AtLocation.X = OriginalLocation.X + Widget->Padding.TopLeft.X;
 
-			DrawVisitor.AtLocation.X += Widget->PivotPointRatio.X * float(DrawVisitor.ParentSize.X - Widget->DesiredSize.X);
-			DrawVisitor.ParentSize.X -= Widget->PivotPointRatio.X * float(DrawVisitor.ParentSize.X - Widget->DesiredSize.X);
+			DrawVisitor.AtLocation.X += Widget->PivotPointRatio.X * float(DrawVisitor.AllowedSize.X - Widget->DesiredSize.X);
 
-			DrawVisitor.StartHeight = (MinHeight - CurrentHeight);
-			//std::cerr << "DrawPart " << DrawVisitor.StartHeight << " " << CurrentHeight + DrawVisitor.StartHeight << " -> " << CurrentHeight +  Widget->DesiredSize.Y - DrawVisitor.StartHeight << " at " << DrawVisitor.AtLocation.Y << std::endl;
-			Widget->Draw(DrawVisitor);
-			DrawVisitor.StartHeight = 0;
-		}
-		else if (CurrentHeight >= MinHeight && (!bHasDrawFirst || (CurrentHeight /*+ Widget->DesiredSize.Y*/ <= MaxHeight)))
-		{
-			bHasDrawFirst = true;
-			DrawVisitor.AtLocation.Y = OriginalLocation.Y + CurrentHeight - MinHeight + Widget->Padding.TopLeft.Y;
-			DrawVisitor.AtLocation.X = OriginalLocation.X + Widget->Padding.TopLeft.X;
+			DrawVisitor.AllowedSize.X = PageSize.X - Widget->PivotPointRatio.X * float(DrawVisitor.AllowedSize.X - Widget->DesiredSize.X);
+			DrawVisitor.AllowedSize.Y = PageSize.Y - (CurrentHeight - LocalIndexPageMinHeight) - Widget->GetPaddingAlongY();
 
-			DrawVisitor.AtLocation.X += Widget->PivotPointRatio.X * float(DrawVisitor.ParentSize.X - Widget->DesiredSize.X);
-			DrawVisitor.ParentSize.X -= Widget->PivotPointRatio.X * float(DrawVisitor.ParentSize.X - Widget->DesiredSize.X);
-
-			const int OldMaxAllowedHeight = DrawVisitor.MaxAllowedHeight;
-			DrawVisitor.MaxAllowedHeight = MaxHeight - CurrentHeight;
-
-			//std::cerr << "Draw " << CurrentHeight << " -> " << CurrentHeight +  std::min(DrawVisitor.MaxAllowedHeight, Widget->DesiredSize.Y) << " at " << DrawVisitor.AtLocation.Y << std::endl;
+			DrawVisitor.MaxAllowedHeight = LocalIndexPageMaxHeight - CurrentHeight;
+			DrawVisitor.StartHeight = std::max(0, (LocalIndexPageMinHeight - CurrentHeight));
+			std::cerr << DebugName << " Draw for " << Widget->DebugName << " " << CurrentHeight << " -> " << CurrentHeight + Widget->DesiredSize.Y << " (MawAllowedHeight " << DrawVisitor.MaxAllowedHeight << ") at " << DrawVisitor.AtLocation.Y << std::endl;
 			Widget->Draw(DrawVisitor);
 			DrawVisitor.MaxAllowedHeight = OldMaxAllowedHeight;
+			DrawVisitor.StartHeight = OldStartHeight;
 		}
+
+		LastWidgetThatPossiblyNeedToBeDrawn = bJustDrawnLastWidget || LocalIndexPage != CurrentPage - 1 ? nullptr : Widget;
+		bJustDrawnLastWidget = false;
 		//else
 		//{
-		//	std::cerr << "CurrentHeight + Widget->DesiredSize.Y " << CurrentHeight + Widget->DesiredSize.Y << " at " << DrawVisitor.AtLocation.Y << std::endl;
+		//	std::cerr << DebugName << "No draw => " << CurrentHeight << " " << Widget->DesiredSize.Y << " " << MinHeight << " " << MaxHeight << std::endl;
 		//}
-		CurrentHeight += Widget->DesiredSize.Y + Widget->Padding.BottomRight.Y;
+
+		std::cerr << DebugName << " CurrentHeight " << CurrentHeight << " -> " << CurrentHeight + std::min(DrawVisitor.MaxAllowedHeight, Widget->DesiredSize.Y) << " at " << DrawVisitor.AtLocation.Y 
+			<< " LocalPage " << LocalIndexPage << " " << LocalIndexPageMinHeight << " => " << LocalIndexPageMaxHeight << std::endl;
+		CurrentHeight += Widget->DesiredSize.Y + Widget->GetPaddingAlongY();
 	}
+
+	// Page marker
+	if (MaxPage > 1)
+	{
+		CUiText PageMarkerText;
+		char Buffer[] = "123456789\0";
+		sprintf(Buffer, "%d/%d", CurrentPage + 1, MaxPage);
+
+		PageMarkerText.Text = Buffer;
+		PageMarkerText.Font = CApp::Get()->AppSettings.DefaultFont;
+		PageMarkerText.CalcDesiredSize(DesiredSize);
+
+		DrawVisitor.AtLocation.X = OriginalLocation.X + PageSize.X - PageMarkerText.DesiredSize.X;
+		DrawVisitor.AtLocation.Y = OriginalLocation.Y + PageSize.Y;
+		DrawVisitor.StartHeight = 0;
+		DrawVisitor.MaxAllowedHeight = ScreenHeight();
+		PageMarkerText.Draw(DrawVisitor);
+	}
+
 	DrawVisitor.AtLocation = OriginalLocation;
-	DrawVisitor.ParentSize = OriginalParentSize;
+	DrawVisitor.AllowedSize = OriginalAllowdSize;
 	DrawVisitor.StartHeight = OldStartHeight;
+	DrawVisitor.MaxAllowedHeight = OldMaxAllowedHeight;
 }

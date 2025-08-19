@@ -21,6 +21,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 class CUiText;
 class CUiHorizontalBox;
+class CUiVerticalBox;
 
 class CUiMainPage : public CUiOverlay
 {
@@ -38,6 +39,7 @@ public:
 
 protected:
 	CUiHorizontalBox* BreadcrumbHBox;
+	CUiVerticalBox* MainVerticalBox;
 };
 
 #endif

@@ -31,6 +31,8 @@ CUiText::CUiText() : CUiWidget()
 #endif
 	Type = UiTextFlags::None;
 	bIsEditable = false;
+
+	DebugName = "UiText";
 }
 
 void CUiText::SetHtml(const std::string& InHtml)
@@ -201,7 +203,6 @@ void CUiText::CalcDesiredSize(SVector2i AllowedSize)
 	}
 
 	DesiredSize.X = std::max(CurrentSize, DesiredSize.X);
-	DesiredSize.Y += GetPaddingAlongY();
 }
 
 void CUiText::Draw(SUiDrawVisitor& DrawVisitor)
@@ -244,7 +245,7 @@ void CUiText::Draw(SUiDrawVisitor& DrawVisitor)
 				}
 				CurrentSize += FontSize;
 			}
-			DrawVisitor.HasDraw(this, SRect(DrawVisitor.AtLocation, DrawVisitor.AtLocation + DesiredSize));
+			DrawVisitor.MarkHasDrawn(this, SRect(DrawVisitor.AtLocation, DrawVisitor.AtLocation + DesiredSize));
 		}
 		/*bNeedRedraw = false;*/
 
@@ -253,7 +254,8 @@ void CUiText::Draw(SUiDrawVisitor& DrawVisitor)
 			DrawVisitor.SetInteractable(this, SRect(DrawVisitor.AtLocation, DrawVisitor.AtLocation + DesiredSize));
 		}
 	}
-	else if (Visibility >= EUiWidgetVisibility::Hidden)
+	
+	if (Visibility >= EUiWidgetVisibility::Hidden)
 	{
 		DrawVisitor.SetVisible(this, SRect(DrawVisitor.AtLocation, DrawVisitor.AtLocation + DesiredSize));
 	}

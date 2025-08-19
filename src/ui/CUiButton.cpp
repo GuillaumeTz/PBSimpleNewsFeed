@@ -21,6 +21,8 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 CUiButton::CUiButton() : CUiWidget()
 {
 	Visibility = EUiWidgetVisibility::Visible;
+
+	DebugName = "UiButton";
 }
 
 CUiButton::~CUiButton()
@@ -43,12 +45,12 @@ void CUiButton::Draw(SUiDrawVisitor& DrawVisitor)
 {
 	if (*Child && Visibility > EUiWidgetVisibility::Hidden)
 	{
-		const SVector2i Size = bFill ? DrawVisitor.ParentSize : DesiredSize;
+		const SVector2i Size = bFill ? DrawVisitor.AllowedSize : DesiredSize;
 		if (bIsPushed)
 		{
 			int OffsetSizeY = 5;
 			DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, Size.X, Size.Y + OffsetSizeY, 128);
-			DrawVisitor.HasDraw(this, SRect(DrawVisitor.AtLocation, DrawVisitor.AtLocation + Size + SVector2i(0, OffsetSizeY)));
+			DrawVisitor.MarkHasDrawn(this, SRect(DrawVisitor.AtLocation, DrawVisitor.AtLocation + Size + SVector2i(0, OffsetSizeY)));
 		}
 
 		//const SVector2i AtLocation = DrawVisitor.AtLocation;

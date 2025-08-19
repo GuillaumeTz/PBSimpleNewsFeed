@@ -22,7 +22,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 class CUiVerticalBox : public CUiCompositeWidget
 {
 public:
-	SVector2i MaxSize;
+	bool bSupportMultiplePages;
 
 public:
 	CUiVerticalBox();
@@ -45,7 +45,6 @@ public:
 private:
 	int CurrentPage;
 	int MaxPage;
-	
 };
 
 #endif

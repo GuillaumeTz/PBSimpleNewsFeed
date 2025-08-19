@@ -28,7 +28,6 @@ CUiContextMenu::CUiContextMenu() : CUiVerticalBox()
 {
 	bDirty = true;
 	bFill = false;
-	MaxSize.Y = -1;
 }
 
 void CUiContextMenu::ActivateOption( CUiButton* Button, SUiContextMenuOption Option)
@@ -77,15 +76,15 @@ void CUiContextMenu::CalcDesiredSize(SVector2i AllowedSize)
 
 void CUiContextMenu::Draw(SUiDrawVisitor& DrawVisitor)
 {
-	CalcDesiredSize(DrawVisitor.ParentSize);
+	CalcDesiredSize(DrawVisitor.AllowedSize);
 
 	FillArea(DrawVisitor.AtLocation.X - 10, DrawVisitor.AtLocation.Y - 10, DesiredSize.X + 20, DesiredSize.Y + 20, 0x00FFFFFF);
 	DrawRect(DrawVisitor.AtLocation.X - 10, DrawVisitor.AtLocation.Y - 10, DesiredSize.X + 20, DesiredSize.Y + 20, 0);
 
-	const SVector2i OriginalParentSize = DrawVisitor.ParentSize;
-	DrawVisitor.ParentSize = DesiredSize;
+	const SVector2i OriginalParentSize = DrawVisitor.AllowedSize;
+	DrawVisitor.AllowedSize = DesiredSize;
 	CUiVerticalBox::Draw(DrawVisitor);
-	DrawVisitor.ParentSize = OriginalParentSize;
+	DrawVisitor.AllowedSize = OriginalParentSize;
 }
 
 void CUiContextMenu::OnLostFocusPath()

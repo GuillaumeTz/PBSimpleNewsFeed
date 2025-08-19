@@ -66,14 +66,14 @@ void CUiWrapBox::CalcDesiredSize(SVector2i AllowedSize)
 
 void CUiWrapBox::Draw(SUiDrawVisitor& DrawVisitor)
 {
-	const SVector2i OriginalParentSize = DrawVisitor.ParentSize;
+	const SVector2i OriginalParentSize = DrawVisitor.AllowedSize;
 	const SVector2i OriginalLocation = DrawVisitor.AtLocation;
 	
 	SVector2i ChildrenSize = DesiredSize;
 	float SpacingRatio = 1.f;
 	if (bFill)
 	{
-		SpacingRatio = float(DrawVisitor.ParentSize.X) / float(ChildrenSize.X);
+		SpacingRatio = float(DrawVisitor.AllowedSize.X) / float(ChildrenSize.X);
 	}
 
 	//if (DrawVisitor.AtLocation.X > 10)
@@ -86,30 +86,30 @@ void CUiWrapBox::Draw(SUiDrawVisitor& DrawVisitor)
 	{
 		CUiWidget* Widget = (*GetChildren())[Index].Get();
 
-		DrawVisitor.ParentSize.X = (Widget->DesiredSize.X + Widget->GetPaddingAlongX()) * SpacingRatio - Widget->GetPaddingAlongX();
+		DrawVisitor.AllowedSize.X = (Widget->DesiredSize.X + Widget->GetPaddingAlongX()) * SpacingRatio - Widget->GetPaddingAlongX();
 		if (bFill)
 		{
-			DrawVisitor.ParentSize.Y = OriginalParentSize.Y - Widget->GetPaddingAlongY();
+			DrawVisitor.AllowedSize.Y = OriginalParentSize.Y - Widget->GetPaddingAlongY();
 		}
 		else
 		{
-			DrawVisitor.ParentSize.Y = ChildrenSize.Y - Widget->GetPaddingAlongY();
+			DrawVisitor.AllowedSize.Y = ChildrenSize.Y - Widget->GetPaddingAlongY();
 		}
 
 		DrawVisitor.AtLocation.X += Widget->Padding.TopLeft.X;
 		const SVector2i AtLocation = DrawVisitor.AtLocation;
-		DrawVisitor.AtLocation.X += Widget->PivotPointRatio.X * float(DrawVisitor.ParentSize.X - Widget->DesiredSize.X);
-		DrawVisitor.AtLocation.Y += Widget->Padding.TopLeft.Y + Widget->PivotPointRatio.Y * float(DrawVisitor.ParentSize.Y - Widget->DesiredSize.Y);
-		DrawVisitor.ParentSize.X -= Widget->PivotPointRatio.X * float(DrawVisitor.ParentSize.X - Widget->DesiredSize.X);
-		DrawVisitor.ParentSize.Y -= Widget->PivotPointRatio.Y * float(DrawVisitor.ParentSize.Y - Widget->DesiredSize.Y);
+		DrawVisitor.AtLocation.X += Widget->PivotPointRatio.X * float(DrawVisitor.AllowedSize.X - Widget->DesiredSize.X);
+		DrawVisitor.AtLocation.Y += Widget->Padding.TopLeft.Y + Widget->PivotPointRatio.Y * float(DrawVisitor.AllowedSize.Y - Widget->DesiredSize.Y);
+		DrawVisitor.AllowedSize.X -= Widget->PivotPointRatio.X * float(DrawVisitor.AllowedSize.X - Widget->DesiredSize.X);
+		DrawVisitor.AllowedSize.Y -= Widget->PivotPointRatio.Y * float(DrawVisitor.AllowedSize.Y - Widget->DesiredSize.Y);
 
 		//DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DrawVisitor.ParentSize.X, DrawVisitor.ParentSize.Y, 0);
 		Widget->Draw(DrawVisitor);
 
-		DrawVisitor.AtLocation.X += DrawVisitor.ParentSize.X + Widget->Padding.BottomRight.X;
+		DrawVisitor.AtLocation.X += DrawVisitor.AllowedSize.X + Widget->Padding.BottomRight.X;
 		DrawVisitor.AtLocation.Y = AtLocation.Y;
 	}
 
 	DrawVisitor.AtLocation = OriginalLocation;
-	DrawVisitor.ParentSize = OriginalParentSize;
+	DrawVisitor.AllowedSize = OriginalParentSize;
 }

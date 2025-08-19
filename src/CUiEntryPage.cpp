@@ -26,6 +26,9 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 CUiEntryPage::CUiEntryPage() : CUiVerticalBox()
 {
 	CurrentEntryIndex = -1;
+	bSupportMultiplePages = true;
+
+	DebugName = "UiEntryPage";
 }
 
 void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
@@ -66,20 +69,12 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 		ButtonOpenExternalLink->OnPushFunction = std::tr1::bind(&CUiEntryPage::OnOpenExternalLink, this);
 		TitleHorizontalBox->AddChild(ButtonOpenExternalLink);
 
-		{
-			PageNumText = CUiTextAllocator::New();
-			PageNumText->Font = App->AppSettings.EntryTextFont;
-			PageNumText->Padding.TopLeft.X = 50;
-			TitleHorizontalBox->AddChild(*PageNumText);
-		}
-
-		{
-			CUiText* IndexEntryInAllText = CUiTextAllocator::New();
-			IndexEntryInAllText->Padding.TopLeft.X = 10;
-			IndexEntryInAllText->Font = App->AppSettings.EntryTextFont;
-			IndexEntryInAllText->Text = "(" + CUtils::ToString(EntryIndex + 1) + "/" + CUtils::ToString(CurrentFeed->Entries.size()) + ")";
-			TitleHorizontalBox->AddChild(IndexEntryInAllText);
-		}
+		//{
+		//	PageNumText = CUiTextAllocator::New();
+		//	PageNumText->Font = App->AppSettings.EntryTextFont;
+		//	PageNumText->Padding.TopLeft.X = 50;
+		//	TitleHorizontalBox->AddChild(*PageNumText);
+		//}
 	}
 
 	{
@@ -92,6 +87,14 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 			UiText->Font = App->AppSettings.EntryTextFont;
 			UiText->Text = NewsEntry.Time;
 			HorizontalBox->AddChild(UiText);
+		}
+
+		{
+			CUiText* IndexEntryInAllText = CUiTextAllocator::New();
+			IndexEntryInAllText->Padding.TopLeft.X = 20;
+			IndexEntryInAllText->Font = App->AppSettings.EntryTextFont;
+			IndexEntryInAllText->Text = "(" + CUtils::ToString(EntryIndex + 1) + "/" + CUtils::ToString(CurrentFeed->Entries.size()) + ")";
+			HorizontalBox->AddChild(IndexEntryInAllText);
 		}
 
 		if (!bIsReddit)
@@ -133,7 +136,6 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 				if (CApp::IsFileValid(ExternalLinkDownload.GetFilePath().c_str()))
 				{
 					CUiReaderModeBrowser* ReaderModeBrowser = new CUiReaderModeBrowser();
-					ReaderModeBrowser->MaxSize = SVector2i();
 					ReaderModeBrowser->ShowUrl(NewsEntry.ExternalLink, 0, false, CurrentFeed);
 					AddChild(ReaderModeBrowser);
 				}
@@ -180,20 +182,19 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 		if (bReaderModeFileDLed)
 		{
 			CUiReaderModeBrowser* ReaderModeBrowser = new CUiReaderModeBrowser();
-			ReaderModeBrowser->MaxSize = SVector2i();
 			ReaderModeBrowser->ShowUrl(NewsEntry.Link, 0, false, CurrentFeed);
 			AddChild(ReaderModeBrowser);
 		}
 	}
 
-	PageNumText->Text = CUtils::ToString(GetPageIndex() + 1) + "/" + CUtils::ToString(GetMaxPageIndex());
+	// PageNumText->Text = CUtils::ToString(GetPageIndex() + 1) + "/" + CUtils::ToString(GetMaxPageIndex());
 }
 
 void CUiEntryPage::CalcDesiredSize(SVector2i AllowedSize)
 {
 	CUiVerticalBox::CalcDesiredSize(AllowedSize);
 
-	PageNumText->Text = CUtils::ToString(GetPageIndex() + 1) + "/" + CUtils::ToString(GetMaxPageIndex());
+	// PageNumText->Text = CUtils::ToString(GetPageIndex() + 1) + "/" + CUtils::ToString(GetMaxPageIndex());
 }
 
 void CUiEntryPage::OnOpenExternalLink()

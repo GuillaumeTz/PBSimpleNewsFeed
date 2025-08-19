@@ -22,12 +22,13 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 class CUiFeedList : public CUiVerticalBox
 {
 public:
-	void Refresh(const std::vector<int>& InPath, int IndexPage = 0);
+	CUiFeedList();
+
+	void Refresh(const std::vector<int>& InPath);
 	void OnOpenFeed(class CUiButton* Button, int NewsFeedIndex);
 
 private:
 	std::vector<int> CurrentPath;
-	int CurrentPageIndex;
 };
 
 #endif

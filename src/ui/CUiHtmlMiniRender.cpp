@@ -27,8 +27,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 CUiHtmlMiniRender::CUiHtmlMiniRender() : CUiVerticalBox()
 {
-	MaxSize.X = 1000;
-	MaxSize.Y = 800;
+	bSupportMultiplePages = true;
 }
 
 void CUiHtmlMiniRender::SetBodyHtml(const std::string& InHtml)

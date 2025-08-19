@@ -21,6 +21,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <string>
 #include <tr1/functional>
 
 #include "ui/CMemPool.h"
@@ -35,7 +36,7 @@ public:
 
 	SVector2i AtLocation;
 	SRect ClipZone;
-	SVector2i ParentSize;
+	SVector2i AllowedSize;
 
 	int StartHeight;
 	int MaxAllowedHeight;
@@ -44,7 +45,7 @@ public:
 	std::map<CUiWidget*, SRect> VisibleZones;
 	std::vector<std::pair<CUiWidget*, SRect>> InteractableZones;
 
-	void HasDraw(CUiWidget* InWidget, const SRect& DrawZone);
+	void MarkHasDrawn(CUiWidget* InWidget, const SRect& DrawZone);
 	void SetVisible(CUiWidget* InWidget, const SRect& VisibleZone);
 	void SetInteractable(CUiWidget* InWidget, const SRect& VisibleZone);
 };
@@ -77,6 +78,9 @@ public:
 	bool bNeedRedraw;
 	bool bFill;
 
+	std::string DebugName;
+
+public:
 	CUiWidget();
 	virtual ~CUiWidget();
 

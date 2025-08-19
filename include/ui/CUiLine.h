@@ -26,7 +26,7 @@ public:
 
 	bool bVertical;
 
-	virtual void CalcDesiredSize(SVector2i AllowedSize) override { DesiredSize = SVector2i(1); };
+	virtual void CalcDesiredSize(SVector2i AllowedSize) override;;
 	virtual void Draw(SUiDrawVisitor& DrawVisitor) override;
 	virtual void DeleteItself() override;
 	

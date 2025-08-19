@@ -22,20 +22,16 @@ void CUiSettingsPage::Refresh()
 	ClearChildren();
 
 	CUiVerticalBox* VerticalBox = new CUiVerticalBox();
+	VerticalBox->bSupportMultiplePages = true;
 	AddChild(VerticalBox);
 	VerticalBox->Padding.TopLeft.X = 20;
 	VerticalBox->Padding.BottomRight.X = 20;
 
 	// Choose Opml file
 	{
-		CUiHorizontalBox* HorizontalBox = new CUiHorizontalBox();
-		HorizontalBox->bFill = true;
-		HorizontalBox->Padding.BottomRight.Y = 20;
-		VerticalBox->AddChild(HorizontalBox);
-
 		CUiText* Text = CUiTextAllocator::New();
 		Text->Text = "OPML file location : ";
-		HorizontalBox->AddChild(Text);
+		VerticalBox->AddChild(Text);
 
 		{
 			CUiText* OpmlFilePathText = CUiTextAllocator::New();
@@ -43,7 +39,7 @@ void CUiSettingsPage::Refresh()
 			OpmlFilePathText->SetEditable(true);
 			OpmlFilePathText->Type = UiTextFlags::Int;
 			OpmlFilePathText->OnEditedFunction = std::tr1::bind(&CUiSettingsPage::OnOpmlFilePathChanged, this, std::tr1::placeholders::_1);
-			HorizontalBox->AddChild(OpmlFilePathText);
+			VerticalBox->AddChild(OpmlFilePathText);
 		}
 	}
 

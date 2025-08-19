@@ -22,6 +22,8 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 class CUiHorizontalBox : public CUiCompositeWidget
 {
 public:
+	CUiHorizontalBox();
+
 	virtual void CalcDesiredSize(SVector2i AllowedSize) override;
 	virtual void Draw(SUiDrawVisitor& DrawVisitor) override;
 };

@@ -26,18 +26,6 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 #include <set>
 #include <stack>
 
-struct SElementScoreInfo
-{
-public:
-	SElementScoreInfo() : Element(NULL), Score(0.f) { }
-	SElementScoreInfo(tinyxml2::XMLElement* InElement, float InScore) : Element(InElement), Score(InScore) { }
-
-	bool operator<(const SElementScoreInfo& rhs) const { return Score < rhs.Score; }
-
-	tinyxml2::XMLElement* Element;
-	float Score;
-};
-
 struct SReaderModeBrowserHistoryItem
 {
 	std::string Url;
