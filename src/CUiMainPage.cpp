@@ -34,7 +34,8 @@ CUiMainPage::CUiMainPage() : CUiOverlay()
 	BreadcrumbHBox = NULL;
 	MainVerticalBox = NULL;
 	DownloadCounterText = NULL;
-	bFill = true;
+	bFillWidth = true;
+	bFillHeight = true;
 
 	DebugName = "UIMainPage";
 }
@@ -48,15 +49,19 @@ void CUiMainPage::Refresh()
 	MainVerticalBox = new CUiVerticalBox();
 	MainVerticalBox->DebugName = "MainPageVBox";
 	AddChild(MainVerticalBox);
-	MainVerticalBox->Padding.TopLeft.X = 20;
-	MainVerticalBox->Padding.BottomRight.X = 20;
-	MainVerticalBox->Padding.BottomRight.Y = 10;
+	MainVerticalBox->SetPadding(20, 0, 20, 0);
 
 	// add header bar
 	{
+		{
+			CUiLine* Line = CUiLineAllocator::New();
+			Line->bVertical = false;
+			MainVerticalBox->AddChild(Line);
+		}
+
 		CUiHorizontalBox* HeaderBarHBox = new CUiHorizontalBox();
 		HeaderBarHBox->DebugName = "HeaderBarHBox";
-		HeaderBarHBox->bFill = true;
+		HeaderBarHBox->bFillWidth = true;
 
 		{
 			CUiButton* HomeButton = new CUiButton();
@@ -65,7 +70,7 @@ void CUiMainPage::Refresh()
 			Text->Text = "X";
 			HomeButton->Child = Text;
 			HomeButton->OnPushFunction = std::tr1::bind(&CApp::QuitApplication, App);
-			HomeButton->Padding.BottomRight.X = 20;
+			HomeButton->SetPadding(10, 10, 10, 10);
 			HeaderBarHBox->AddChild(HomeButton);
 		}
 
@@ -76,19 +81,19 @@ void CUiMainPage::Refresh()
 			Text->Text = "Sync";
 			SyncButton->Child = Text;
 			SyncButton->OnPushFunction = std::tr1::bind(&CApp::SyncAll, App);
-			SyncButton->Padding.BottomRight.X = 20;
+			SyncButton->SetPadding(10, 10, 10, 10);
 			HeaderBarHBox->AddChild(SyncButton);
 		}
 
 		{
-			CUiButton* SyncButton = new CUiButton();
+			CUiButton* DownloadButton = new CUiButton();
 			CUiText* Text = CUiTextAllocator::New();
 			Text->Font = App->AppSettings.MenuButtonFont;
 			Text->Text = "Download";
-			SyncButton->Child = Text;
-			SyncButton->OnPushFunction = std::tr1::bind(&CApp::DLReaderMode, App);
-			SyncButton->Padding.BottomRight.X = 20;
-			HeaderBarHBox->AddChild(SyncButton);
+			DownloadButton->Child = Text;
+			DownloadButton->OnPushFunction = std::tr1::bind(&CApp::DLReaderModeAll, App);
+			DownloadButton->SetPadding(10, 10, 10, 10);
+			HeaderBarHBox->AddChild(DownloadButton);
 		}
 
 		{
@@ -98,7 +103,7 @@ void CUiMainPage::Refresh()
 			Text->Text = "Settings";
 			Button->Child = Text;
 			Button->OnPushFunction = std::tr1::bind(&CApp::OpenSettingsPage, App);
-			Button->Padding.BottomRight.X = 20;
+			Button->SetPadding(10, 10, 10, 10);
 			HeaderBarHBox->AddChild(Button);
 		}
 
@@ -109,11 +114,17 @@ void CUiMainPage::Refresh()
 			Text->Text = "<=";
 			BackButton->Child = Text;
 			BackButton->OnPushFunction = std::tr1::bind(&CApp::GoBack, App);
+			BackButton->SetPadding(10, 10, 10, 10);
 			HeaderBarHBox->AddChild(BackButton);
 		}
 
-		HeaderBarHBox->Padding.BottomRight.Y = 10;
 		MainVerticalBox->AddChild(HeaderBarHBox);
+
+		{
+			CUiLine* Line = CUiLineAllocator::New();
+			Line->bVertical = false;
+			MainVerticalBox->AddChild(Line);
+		}
 	}
 
 	{
@@ -123,9 +134,8 @@ void CUiMainPage::Refresh()
 
 		{
 			CUiHorizontalBox* HorizontalBox = new CUiHorizontalBox();
-			HorizontalBox->DebugName = "BredCrumbHBox";
-			HorizontalBox->bFill = true;
-			HorizontalBox->Padding.BottomRight.Y = 5;
+			HorizontalBox->DebugName = "BreadCrumbHBox";
+			HorizontalBox->bFillWidth = true;
 			VertBox->AddChild(HorizontalBox);
 
 			BreadcrumbHBox = new CUiHorizontalBox();
@@ -135,6 +145,7 @@ void CUiMainPage::Refresh()
 				DownloadCounterText = CUiTextAllocator::New();
 				DownloadCounterText->Font = App->AppSettings.FeedPathFont;
 				DownloadCounterText->PivotPointRatio.X = 1.f;
+				DownloadCounterText->SetPadding(0, 5, 0, 5);
 				HorizontalBox->AddChild(DownloadCounterText);
 				RefreshDownloadCounter();
 			}
@@ -144,7 +155,6 @@ void CUiMainPage::Refresh()
 		{
 			CUiHorizontalBox* HorizontalBox = new CUiHorizontalBox();
 			HorizontalBox->DebugName = "FoldersHBox";
-			HorizontalBox->Padding.BottomRight.Y = 5;
 			VertBox->AddChild(HorizontalBox);
 
 			{
@@ -154,7 +164,7 @@ void CUiMainPage::Refresh()
 				Text->Text = "Folders";
 				FoldersButton->Child = Text;
 				FoldersButton->OnPushFunction = std::tr1::bind(&CApp::ShowFolders, App);
-				FoldersButton->Padding.BottomRight.X = 25;
+				FoldersButton->SetPadding(0, 0, 15, 5);
 				HorizontalBox->AddChild(FoldersButton);
 			}
 
@@ -165,6 +175,7 @@ void CUiMainPage::Refresh()
 				Text->Text = "Last Entries";
 				LastEntriesButton->Child = Text;
 				LastEntriesButton->OnPushFunction = std::tr1::bind(&CApp::ShowLastEntries, App);
+				LastEntriesButton->SetPadding(15, 0, 15, 5);
 				HorizontalBox->AddChild(LastEntriesButton);
 			}
 
@@ -175,15 +186,39 @@ void CUiMainPage::Refresh()
 				Text->Text = "Sync";
 				SyncButton->Child = Text;
 				SyncButton->OnPushFunction = std::tr1::bind(&CApp::SyncCurrent, App);
-				SyncButton->Padding.TopLeft.X = 40;
+				SyncButton->SetPadding(15, 0, 15, 5);
+				HorizontalBox->AddChild(SyncButton);
+			}
+
+			{
+				CUiButton* SyncButton = new CUiButton();
+				CUiText* Text = CUiTextAllocator::New();
+				Text->Font = App->AppSettings.SwitchViewButtonsFont;
+				Text->Text = "Download";
+				SyncButton->Child = Text;
+				SyncButton->OnPushFunction = std::tr1::bind(&CApp::DLReaderModeCurrent, App);
+				SyncButton->SetPadding(15, 0, 15, 5);
+				HorizontalBox->AddChild(SyncButton);
+			}
+
+			{
+				CUiButton* SyncButton = new CUiButton();
+				CUiText* Text = CUiTextAllocator::New();
+				Text->Font = App->AppSettings.SwitchViewButtonsFont;
+				Text->Text = "Mark as read";
+				SyncButton->Child = Text;
+				SyncButton->OnPushFunction = std::tr1::bind(&CApp::MarkAsReadCurrent, App);
+				SyncButton->SetPadding(15, 0, 15, 5);
 				HorizontalBox->AddChild(SyncButton);
 			}
 		}
 
 		CUiLine* Line = CUiLineAllocator::New();
-		Line->Padding.BottomRight.Y = 10;
+		Line->SetBottomPadding(10);
 		VertBox->AddChild(Line);
 	}
+
+	IndexOfMainElement = MainVerticalBox->GetChildren()->size();
 
 	SetPath({});
 
@@ -192,17 +227,24 @@ void CUiMainPage::Refresh()
 
 void CUiMainPage::RefreshDownloadCounter()
 {
-	CApp* App = CApp::Get();
+	CDownloadManager* DownloadManager = CDownloadManager::Get();
 
-	if (App->NbTotalDownload > 0)
+	if (DownloadManager->NumDownloadRemaining > 0)
 	{
 		std::stringstream stream;
-		stream << "Downloading " << App->NbDownloadFinished << "/" << App->NbTotalDownload << std::endl;
+		if (bSyncing)
+		{
+			stream << "Syncing " << DownloadManager->NumDownloadRemaining << "..." << std::endl;
+		}
+		else
+		{
+			stream << "Downloading " << DownloadManager->NumDownloadRemaining << "..." << std::endl;
+		}
 		DownloadCounterText->Text = stream.str();
 	}
 	else
 	{
-		DownloadCounterText->Text = "              ";
+		DownloadCounterText->Text = "                      ";
 	}
 }
 
@@ -211,7 +253,7 @@ void CUiMainPage::SetMainElement(CUiWidget* Widget)
 	if (!MainVerticalBox)
 		return;
 
-	MainVerticalBox->GetChildren()->resize(2);
+	MainVerticalBox->GetChildren()->resize(IndexOfMainElement);
 	MainVerticalBox->AddChild(Widget);
 }
 
@@ -220,9 +262,9 @@ CUiWidget* CUiMainPage::GetMainElement()
 	if (!MainVerticalBox)
 		return NULL;
 
-	if ((*MainVerticalBox->GetChildren()).size() > 2)
+	if ((*MainVerticalBox->GetChildren()).size() > IndexOfMainElement)
 	{
-		return (*MainVerticalBox->GetChildren())[2].Get();
+		return (*MainVerticalBox->GetChildren())[IndexOfMainElement].Get();
 	}
 	return NULL;
 }
@@ -240,6 +282,7 @@ void CUiMainPage::SetPath(const std::vector<int>& InFeedPath)
 	CUiText* Text = CUiTextAllocator::New();
 	Text->Font = App->AppSettings.FeedPathFont;
 	Text->Text = "Root";
+	Button->SetPadding(0, 5, 1, 5);
 	Button->Child = Text;
 	std::vector<int> FeedPath;
 	Button->OnPushFunction = std::tr1::bind(&CApp::OpenFeed, App, FeedPath, 0, false);
@@ -252,6 +295,7 @@ void CUiMainPage::SetPath(const std::vector<int>& InFeedPath)
 		Text->Text = " / ";
 		Text->Text += App->GetFeed(InFeedPath, Index + 1)->Title;
 		Button->Child = Text;
+		Button->SetPadding(1, 5, 1, 5);
 		std::vector<int> FeedPath = InFeedPath;
 		FeedPath.resize(Index + 1);
 		Button->OnPushFunction = std::tr1::bind(&CApp::OpenFeed, App, FeedPath, 0, false);

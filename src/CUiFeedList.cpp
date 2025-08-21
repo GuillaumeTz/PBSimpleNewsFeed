@@ -79,7 +79,7 @@ void CUiFeedList::Refresh(const std::vector<int>& InPath)
 			CUiNewsFeedButton* NewsFeedButton = CUiNewsFeedButtonAllocator::New();
 			NewsFeedButton->SetFeed(It->FeedPath);
 			NewsFeedButton->OnPushFunction = std::tr1::bind(&CUiFeedList::OnOpenFeed, this, std::tr1::placeholders::_1, It->Index);
-			NewsFeedButton->Padding.BottomRight.Y = 15;
+			NewsFeedButton->SetBottomPadding(15);
 			AddChild(NewsFeedButton);
 		}
 	}
@@ -95,7 +95,7 @@ void CUiFeedList::Refresh(const std::vector<int>& InPath)
 			Path.push_back(Index);
 			NewsFeedButton->SetFeed(Path);
 			NewsFeedButton->OnPushFunction = std::tr1::bind(&CUiFeedList::OnOpenFeed, this, std::tr1::placeholders::_1, Index);
-			NewsFeedButton->Padding.BottomRight.Y = 15;
+			NewsFeedButton->SetBottomPadding(15);
 			AddChild(NewsFeedButton);
 		}
 	}

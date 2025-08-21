@@ -189,7 +189,7 @@ bool CDownloadGroup::IsFinished() const
 	return true;
 }
 
-CDownloadManager::CDownloadManager() : MaxParallelDownloads(16), MaxParallelDownloadByHostname(5)
+CDownloadManager::CDownloadManager() : MaxParallelDownloads(16), MaxParallelDownloadByHostname(5), NumDownloadRemaining(0)
 {
 
 }
@@ -212,9 +212,7 @@ void CDownloadManager::AddDownloadGroup(const CDownloadGroup& DownloadGroup, boo
 {
 	//check that wifi is connected
 	if (!ConnectToWifi())
-	{
 		return;		
-	}
 
 	if (Downloads.empty())
 	{
@@ -264,6 +262,7 @@ void CDownloadManager::RemoveDuplicates()
 			}
 		}
 	}
+	NumDownloadRemaining = Urls.size();
 }
 
 bool CDownloadManager::Check()
@@ -350,6 +349,8 @@ bool CDownloadManager::Check()
 		}
 	}
 
+	NumDownloadRemaining -= DownloadFinished.size();
+
 	for (int Index = 0; Index < DownloadFinished.size(); ++Index)
 	{
 		CDownload& Download(DownloadFinished[Index]);
@@ -396,11 +397,18 @@ void CDownloadManager::TickHandler()
 {
 	if (!CDownloadManager::Get()->Check())
 	{
+		SetAutoPowerOff(1);
+		// iv_sleepmode(1);
+
+		CDownloadManager::Get()->NumDownloadRemaining = 0;
 		ClearTimer(&CDownloadManager::TickHandler);
 	}
 	else
 	{
 		//Need to do this on reader
+		SetAutoPowerOff(0);
+		// iv_sleepmode(0);
+
 		SetHardTimer("DownloadManager", &CDownloadManager::TickHandler, 500);
 	}
 }

@@ -24,6 +24,7 @@ CUiNewsEntryButton::CUiNewsEntryButton() : CUiButton()
 {
 	CurrentEntryIndex = -1;
 	bHasBeenDrawn = false;
+	bFillWidth = true;
 
 	DebugName = "UiNewsEntryButton";
 }
@@ -95,6 +96,13 @@ void CUiNewsEntryButton::Draw(SUiDrawVisitor& DrawVisitor)
 		CNewsFeed* NewsFeed = App->GetFeed(CurrentPath);
 		CNewsEntry& NewsEntry = NewsFeed->Entries[CurrentEntryIndex];
 		NewsEntry.bIsNew = false;
+
+		CUiText* UiText = dynamic_cast<CUiText*>(Child.Get());
+		if (UiText && UiText->Text.find("* ") == 0)
+		{
+			UiText->Text.erase(UiText->Text.begin());
+			UiText->Text.erase(UiText->Text.begin());
+		}
 	}
 }
 

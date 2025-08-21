@@ -29,6 +29,12 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 class CUiWidget;
 
+class CInkViewInterface
+{
+public:
+	static float Scale;
+};
+
 class SUiDrawVisitor
 {
 public:
@@ -41,7 +47,7 @@ public:
 	int StartHeight;
 	int MaxAllowedHeight;
 
-	std::map<CUiWidget*, SRect> DirtyZones;
+	std::map<CUiWidget*, SRect> DrawnZones;
 	std::map<CUiWidget*, SRect> VisibleZones;
 	std::vector<std::pair<CUiWidget*, SRect>> InteractableZones;
 
@@ -69,14 +75,17 @@ struct SUiContextMenuOption
 
 class CUiWidget : public CReferenced
 {
+private:
+	SRect Padding;
+
 public:
 	CUiWidget* Parent;
-	SRect Padding;
 	SVector2i DesiredSize;
 	SVector2f PivotPointRatio;
 	EUiWidgetVisibility::Type Visibility;
 	bool bNeedRedraw;
-	bool bFill;
+	bool bFillWidth;
+	bool bFillHeight;
 
 	std::string DebugName;
 
@@ -84,9 +93,13 @@ public:
 	CUiWidget();
 	virtual ~CUiWidget();
 
-	SVector2i GetPaddingSize() const { return Padding.TopLeft + Padding.BottomRight; }
-	int GetPaddingAlongX() const { return Padding.TopLeft.X + Padding.BottomRight.X; }
-	int GetPaddingAlongY() const { return Padding.TopLeft.Y + Padding.BottomRight.Y; }
+	void SetPadding(int Left, int Top, int Right, int Bottom) { Padding.TopLeft = SVector2i(Left, Top) * CInkViewInterface::Scale; Padding.BottomRight = SVector2i(Right, Bottom) * CInkViewInterface::Scale; }
+	void SetBottomPadding(int Bottom) { Padding.BottomRight.Y = Bottom * CInkViewInterface::Scale; }
+	const SRect& GetPadding() const { return Padding; }
+
+	SVector2i GetPaddingSize() const { return (GetPadding().TopLeft + GetPadding().BottomRight); }
+	int GetPaddingAlongX() const { return (GetPadding().TopLeft.X + GetPadding().BottomRight.X); }
+	int GetPaddingAlongY() const { return (GetPadding().TopLeft.Y + GetPadding().BottomRight.Y); }
 
 	template<class T>
 	std::vector<T*> FindChildrenRecursive()

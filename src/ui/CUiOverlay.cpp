@@ -46,7 +46,7 @@ void CUiOverlay::Draw(SUiDrawVisitor& DrawVisitor)
 	{
 		CUiWidget* Widget = (*GetChildren())[Index].Get();
 
-		DrawVisitor.AtLocation = OriginalLocation + Widget->Padding.TopLeft;
+		DrawVisitor.AtLocation = OriginalLocation + Widget->GetPadding().TopLeft;
 		DrawVisitor.AllowedSize = OriginalParentSize - Widget->GetPaddingSize();
 
 		Widget->Draw(DrawVisitor);

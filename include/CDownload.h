@@ -108,6 +108,8 @@ public:
 
 	int MaxParallelDownloads;
 	int MaxParallelDownloadByHostname;
+	int NumDownloadRemaining;
+
 
 private:
 	CDownloadManager();

@@ -39,8 +39,6 @@ private:
 	int CurrentEntryIndex;
 	std::string CurrentTag;
 	bool bHasBeenDrawn;
-
-	CUiText* UiText;
 };
 
 class CUiNewsEntryButtonAllocator : public CStaticPoolAllocator<CUiNewsEntryButton>

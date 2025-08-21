@@ -51,13 +51,13 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 	NewsEntry.bHasRead = true;
 	NewsEntry.bIsNew = false;
 
-	CDownload ReaderModeDownload = CApp::GetReaderModeDownloadFor(NewsEntry.Link, CurrentFeed);
-	bool bReaderModeFileDLed = CApp::IsFileValid(ReaderModeDownload.GetFilePath().c_str());
-	bool bIsReddit = NewsEntry.Link.find("www.reddit.com") != std::string::npos;
+	const bool bIsReddit = NewsEntry.Link.find("www.reddit.com") != std::string::npos;
+	const CDownload ReaderModeDownload = bIsReddit ? CApp::GetReaderModeDownloadFor(NewsEntry.ExternalLink, CurrentFeed) : CApp::GetReaderModeDownloadFor(NewsEntry.Link, CurrentFeed);
+	const bool bReaderModeFileDLed = CApp::IsFileValid(ReaderModeDownload.GetFilePath().c_str());
 
 	{
 		CUiHorizontalBox* TitleHorizontalBox = new CUiHorizontalBox();
-		TitleHorizontalBox->Padding.BottomRight.Y = 8;
+		TitleHorizontalBox->SetBottomPadding(8);
 		AddChild(TitleHorizontalBox);
 
 		CUiText* UiText = CUiTextAllocator::New();
@@ -79,8 +79,8 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 
 	{
 		CUiHorizontalBox* HorizontalBox = new CUiHorizontalBox();
-		HorizontalBox->bFill = true;
-		HorizontalBox->Padding.BottomRight.Y = 25;
+		HorizontalBox->bFillWidth = true;
+		HorizontalBox->SetBottomPadding(25);
 		
 		{
 			CUiText* UiText = CUiTextAllocator::New();
@@ -91,7 +91,7 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 
 		{
 			CUiText* IndexEntryInAllText = CUiTextAllocator::New();
-			IndexEntryInAllText->Padding.TopLeft.X = 20;
+			IndexEntryInAllText->SetPadding(20, 0, 0, 0);
 			IndexEntryInAllText->Font = App->AppSettings.EntryTextFont;
 			IndexEntryInAllText->Text = "(" + CUtils::ToString(EntryIndex + 1) + "/" + CUtils::ToString(CurrentFeed->Entries.size()) + ")";
 			HorizontalBox->AddChild(IndexEntryInAllText);
@@ -100,7 +100,7 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 		if (!bIsReddit)
 		{
 			CUiText* UiText = CUiTextAllocator::New();
-			UiText->Font =  bReaderModeFileDLed ? App->AppSettings.EntryTextFont : App->AppSettings.EntryTextFontBold;
+			UiText->Font = App->AppSettings.EntryTextFontBold;
 			UiText->Text = "Open ReaderMode";
 
 			CUiButton* ButtonOpenExternalLink = new CUiButton();
@@ -112,7 +112,7 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 		else
 		{
 			CUiText* UiText = CUiTextAllocator::New();
-			UiText->Font =  bReaderModeFileDLed ? App->AppSettings.EntryTextFont : App->AppSettings.EntryTextFontBold;
+			UiText->Font = App->AppSettings.EntryTextFontBold;
 			UiText->Text = "Refresh";
 
 			CUiButton* RefreshButton = new CUiButton();
@@ -161,9 +161,8 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 
 				CUiText* UiHtml = CUiTextAllocator::New();
 				UiHtml->Font = App->AppSettings.EntryTextFont;
-				UiHtml->Padding.TopLeft.X = 10;
-				UiHtml->Padding.BottomRight.X = 10;
-				UiHtml->Padding.BottomRight.Y = 15;
+				UiHtml->SetPadding(10, 0, 10, 0);
+				UiHtml->SetBottomPadding(15);
 				UiHtml->SetHtml(CommentEntry.Text);
 				AddChild(UiHtml);
 			}
@@ -173,9 +172,8 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 	{
 		CUiText* UiHtml = CUiTextAllocator::New();
 		UiHtml->Font = App->AppSettings.EntryTextFont;
-		UiHtml->Padding.TopLeft.X = 10;
-		UiHtml->Padding.BottomRight.X = 10;
-		UiHtml->Padding.BottomRight.Y = 15;
+		SetPadding(10, 0, 10, 0);
+		UiHtml->SetBottomPadding(15);
 		UiHtml->SetHtml(NewsEntry.Text);
 		AddChild(UiHtml);
 

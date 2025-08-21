@@ -21,24 +21,26 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 CUiLine::CUiLine() : CUiWidget()
 {
 	bVertical = false;
+	bFillWidth = true;
+	bFillHeight = true;
 
 	DebugName = "UiLine";
 }
 
 void CUiLine::CalcDesiredSize(SVector2i AllowedSize)
 {
-	DesiredSize = bVertical ? SVector2i(1, AllowedSize.Y) : SVector2i(AllowedSize.X, 1);
+	DesiredSize = bVertical ? SVector2i(1, bFillHeight ? AllowedSize.Y : DesiredSize.Y) : SVector2i(bFillWidth ? AllowedSize.X : DesiredSize.X, 1);
 }
 
 void CUiLine::Draw(SUiDrawVisitor& DrawVisitor)
 {
 	if (bVertical)
 	{
-		DrawLine(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y + DrawVisitor.AllowedSize.Y, 0);
+		DrawLine(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y + DesiredSize.Y, 0);
 	}
 	else
 	{
-		DrawLine(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DrawVisitor.AtLocation.X + DrawVisitor.AllowedSize.X, DrawVisitor.AtLocation.Y, 0);
+		DrawLine(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DrawVisitor.AtLocation.X + DesiredSize.X, DrawVisitor.AtLocation.Y, 0);
 	}
 }
 

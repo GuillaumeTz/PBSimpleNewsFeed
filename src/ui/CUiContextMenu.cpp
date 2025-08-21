@@ -27,7 +27,6 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 CUiContextMenu::CUiContextMenu() : CUiVerticalBox()
 {
 	bDirty = true;
-	bFill = false;
 }
 
 void CUiContextMenu::ActivateOption( CUiButton* Button, SUiContextMenuOption Option)
@@ -51,9 +50,8 @@ void CUiContextMenu::CalcDesiredSize(SVector2i AllowedSize)
 			if (!bFirst)
 			{
 				CUiLine* Line = CUiLineAllocator::New();
-				Line->bFill = true;
-				Line->Padding.BottomRight.Y = 8;
-				Line->Padding.TopLeft.Y = 8;
+				Line->bFillWidth = true;
+				Line->SetPadding(0, 8, 0, 8);
 				AddChild(Line);
 			}
 			bFirst = false;
@@ -63,7 +61,7 @@ void CUiContextMenu::CalcDesiredSize(SVector2i AllowedSize)
 			TextWidget->Font = CApp::Get()->AppSettings.ContextMenuFont;
 
 			CUiButton* Button = new CUiButton();
-			Button->bFill = true;
+			Button->bFillWidth = true;
 			Button->Child = TextWidget;
 			Button->OnPushFunction = std::tr1::bind(&CUiContextMenu::ActivateOption, this, std::tr1::placeholders::_1, Option);
 			AddChild(Button);

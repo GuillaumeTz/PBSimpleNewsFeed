@@ -48,7 +48,7 @@ void CUiFeedPage::SetFeed(const std::vector<int>& FeedPath)
 		CUiNewsEntryButton* EntryButton = CUiNewsEntryButtonAllocator::New();
 		EntryButton->SetEntry(FeedPath, Index);
 		EntryButton->OnPushFunction = std::tr1::bind(&CUiFeedPage::OnOpenEntry, this, Index);
-		EntryButton->Padding.BottomRight.Y = 15;
+		EntryButton->SetBottomPadding(15);
 		AddChild(EntryButton);
 	}
 }

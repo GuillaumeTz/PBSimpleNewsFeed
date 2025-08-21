@@ -160,6 +160,7 @@ CNewsFeed::CNewsFeed()
 	NbUnRead = 0;
 	NbNew = 0;
 	LastEntryTime = 0;
+	XmlElement = nullptr;
 }
 
 void CNewsFeed::LoadFeeds(bool bForce, bool bRecursive)
@@ -321,8 +322,7 @@ void CNewsFeed::SaveDocument()
 		XmlElement->SetAttribute("LastEntryTime", int(LastEntryTime));
 		XmlElement->SetAttribute("bDisplayLastEntryFirst", bDisplayLastEntryFirst);
 		XmlElement->SetAttribute("UniqueId", UniqueId.c_str());
-		if (bDeleted)
-			XmlElement->SetAttribute("bDeleted", bDeleted);
+		XmlElement->SetAttribute("bDeleted", bDeleted);
 	}
 
 	if (bDeleted)
@@ -368,7 +368,10 @@ void CNewsFeed::SaveDocument()
 
 		std::string LocalFilePath = GetLocalFilePath("");
 		std::cerr << "Saving file to " << LocalFilePath << std::endl;
+		iv_unlink(LocalFilePath.c_str());
 		FILE* file = iv_fopen(LocalFilePath.c_str(), "w");
+		if (!file)
+			return;
 		XmlDoc.SaveFile(file);
 		iv_fclose(file);
 	}
@@ -411,7 +414,7 @@ std::vector<CDownload> CNewsFeed::Sync()
 		std::cout << "Newsfeed sync :" << this->Url << std::endl;
 		std::string FixedUrl = Url;
 		//fix for reddit
-		if (FixedUrl.find("https://www.reddit.com/r/") != std::string::npos || FixedUrl.find("reddit.com/r/") != std::string::npos)
+		if (FixedUrl.find("https://www.reddit.com/r/") != std::string::npos || FixedUrl.find("reddit.com/r/") != std::string::npos && FixedUrl.find("/new/.rss") == std::string::npos)
 		{
 			CApp::ReplaceAll(FixedUrl, "/.rss", "/new/.rss?limit=50");
 		}
@@ -608,13 +611,14 @@ const CNewsEntry* CNewsFeed::FindEntryByUniqueId(const std::string& InUniqueId) 
 
 void CNewsFeed::ParseOutlineElementFromOpml(tinyxml2::XMLElement* Element)
 {
+	XmlElement = Element;
+
 	bDeleted = (Element->GetAttribute("bDeleted", 0) == 1);
 	Url = Element->GetAttribute("xmlUrl", "");
 	// std::cout << NewsFeed.Url << std::endl;
 	Title = Element->GetAttribute("title", Element->GetAttribute("text", ""));
 	UniqueId = Element->GetAttribute("UniqueId", Url.c_str());
 	bIsFolder = Url.empty();
-	XmlElement = Element;
 	LastEntryTime = Element->GetAttribute("LastEntryTime", 0);
 	bDisplayLastEntryFirst = (Element->GetAttribute("bDisplayLastEntryFirst", 1) != 0);
 	NbUnRead = Element->GetAttribute("NbUnRead", 0);

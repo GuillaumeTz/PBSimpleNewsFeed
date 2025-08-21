@@ -54,7 +54,7 @@ public:
 	void OnEdited(char* Text);
 
 private:
-	std::vector<int> CuttingTextIndex;
+	std::vector<int> CuttingTextIndexes;
 	bool bIsEditable;
 };
 

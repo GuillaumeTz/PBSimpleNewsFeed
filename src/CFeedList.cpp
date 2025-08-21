@@ -30,6 +30,7 @@ CFeedList::CFeedList()
 CFeedList::~CFeedList()
 {
 	delete XmlDoc;
+	XmlDoc = NULL;
 }
 
 void CFeedList::LoadFeeds(bool bForce)
@@ -45,10 +46,14 @@ void CFeedList::LoadDocument(const std::string& InPath)
 	}
 
 	RootFeed.NewsFeeds.clear();
-	XmlDoc->Clear();
 
 	std::cerr << "Load feed list : " << InPath << std::endl;
-	tinyxml2::XMLError Error = XmlDoc->LoadFile(InPath.c_str());
+	FILE* file = iv_fopen(InPath.c_str(), "rb");
+	if (!file)
+		return;
+
+	tinyxml2::XMLError Error = XmlDoc->LoadFile(file);
+	iv_fclose(file);
 	if (Error != tinyxml2::XML_NO_ERROR)
 		return;
 
@@ -96,7 +101,11 @@ void CFeedList::SaveDocument(const std::string& InPath)
 	if (XmlDoc)
 	{
 		std::cerr << "Save feed list : " << InPath << std::endl;
+		iv_unlink(InPath.c_str());
 		FILE* file = iv_fopen(InPath.c_str(), "w");
+		if (!file)
+			return;
+
 		XmlDoc->SaveFile(file);
 		iv_fclose(file);
 	}

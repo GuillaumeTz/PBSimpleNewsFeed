@@ -20,6 +20,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 int main(int /*argc*/, char ** /*argv*/)
 {
+	std::cerr << "main" << std::endl;
 	CApp::Main();
 
 	return 0;

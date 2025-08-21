@@ -22,6 +22,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 CUiNewsFeedButton::CUiNewsFeedButton() : CUiButton()
 {
+	bFillWidth = true;
 	DebugName = "UiNewsFeedButton";
 }
 
@@ -75,10 +76,15 @@ void CUiNewsFeedButton::Refresh()
 
 		if (NewsFeed->bIsFolder)
 		{
-			stream << "/";
+			stream << "/ ";
 		}
 
 		stream << NewsFeed->Title << " (" << NewsFeed->GetNbUnRead() << ")";
+
+		if (NewsFeed->bIsFolder)
+		{
+			stream << " /";
+		}
 	}
 
 	UiText->Text = stream.str();

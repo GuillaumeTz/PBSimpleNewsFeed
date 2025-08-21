@@ -26,18 +26,14 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 #include "CNewsFeed.h"
 #include "CDownload.h"
 
-struct SFeedDiff
-{
-	std::vector<std::string> FeedPath;
-	CNewsFeed* NewsFeed;
-	bool bAdded;
-};
-
 class CFeedList
 {
 public:
 	CFeedList();
+	CFeedList(const CFeedList& Rhs) = delete;
 	virtual ~CFeedList();
+
+	CFeedList& operator=(const CFeedList& Rhs) = delete;
 
 	CNewsFeed RootFeed;
 	

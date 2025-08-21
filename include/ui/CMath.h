@@ -35,6 +35,8 @@ public:
 	TVector2D<T> operator+(const TVector2D<T>& rhs) const { TVector2D<T> Result = *this; Result += rhs; return Result; }
 	TVector2D<T>& operator-=(const TVector2D<T>& rhs) { X -= rhs.X; Y -= rhs.Y;	return *this; }
 	TVector2D<T> operator-(const TVector2D<T>& rhs) const { TVector2D<T> Result = *this; Result -= rhs; return Result; }
+	TVector2D<T>& operator*=(const T& Scale) { X *= Scale; Y *= Scale; return *this; }
+	TVector2D<T> operator*(const T& Scale) const { TVector2D<T> Result = *this; Result.X *= Scale; Result.Y *= Scale; return Result; }
 	bool operator!=(const TVector2D<T>& rhs) const { return X != rhs.X || Y != rhs.Y; }
 
 	void Clamp(const TVector2D<T>& Min, const TVector2D<T>& Max)
@@ -53,6 +55,7 @@ struct SRect
 	bool bIsValid;
 
 	SRect() : bIsValid(false) {}
+	SRect(int Left, int Top, int Right, int Bottom) : TopLeft(Left, Top), BottomRight(Right, Bottom), bIsValid(true) {}
 	SRect(const SVector2i& InTopLeft, const SVector2i& InBottomRight) : TopLeft(InTopLeft), BottomRight(InBottomRight), bIsValid(true) {}
 
 	bool operator!=(const SRect& rhs) const { return TopLeft != rhs.TopLeft || BottomRight != rhs.BottomRight; }
@@ -63,6 +66,7 @@ struct SRect
 	bool Intersercts(const SRect& RhsRect) const;
 	bool Contains(const SVector2i& Point) const;
 	void Clamp(const SVector2i& Min, const SVector2i& Max);
+	SVector2i Size() const { return TopLeft + BottomRight; }
 };
 
 #endif

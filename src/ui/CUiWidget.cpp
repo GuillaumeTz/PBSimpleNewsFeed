@@ -18,6 +18,8 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 #include <climits>
 
+#include "inkview.h"
+
 SUiDrawVisitor::SUiDrawVisitor()
 {
 	StartHeight = 0;
@@ -26,13 +28,13 @@ SUiDrawVisitor::SUiDrawVisitor()
 
 void SUiDrawVisitor::MarkHasDrawn(CUiWidget* InWidget, const SRect& DrawZone)
 {
-	DirtyZones[InWidget] = DrawZone;
-	VisibleZones[InWidget] = DrawZone;
+	DrawnZones[InWidget].ExtendTo(DrawZone);
+	VisibleZones[InWidget].ExtendTo(DrawZone);
 }
 
 void SUiDrawVisitor::SetVisible(CUiWidget* InWidget, const SRect& VisibleZone)
 {
-	VisibleZones[InWidget] = VisibleZone;
+	VisibleZones[InWidget].ExtendTo(VisibleZone);
 }
 
 void SUiDrawVisitor::SetInteractable(CUiWidget* InWidget, const SRect& VisibleZone)
@@ -101,7 +103,7 @@ void CUiCompositeWidget::CalcDesiredSize(SVector2i AllowedSize)
 	}
 }
 
-CUiWidget::CUiWidget() : Parent(nullptr), PivotPointRatio(0.f, 0.f), Visibility(EUiWidgetVisibility::VisibleNotInteractable), bNeedRedraw(true), bFill(false), bIsPushed(false)
+CUiWidget::CUiWidget() : Parent(nullptr), PivotPointRatio(0.f, 0.f), Visibility(EUiWidgetVisibility::VisibleNotInteractable), bNeedRedraw(true), bFillWidth(false), bFillHeight(false), bIsPushed(false)
 {
 	DebugName = "Widget";
 }
@@ -121,3 +123,5 @@ std::vector<TSharedPtr<CUiWidget>> CUiWidget::GetWidgetPath()
 	}
 	return Path;
 }
+
+float CInkViewInterface::Scale = 1.f;

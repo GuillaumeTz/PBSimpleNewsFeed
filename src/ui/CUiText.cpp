@@ -127,7 +127,7 @@ void CUiText::CalcDesiredSize(SVector2i AllowedSize)
 		SetFont(Font.Font, BLACK);
 	}
 
-	CuttingTextIndex.clear();
+	CuttingTextIndexes.clear();
 
 	DesiredSize.Y += Font.IsValid() ? Font.Font->size : 30;
 
@@ -165,7 +165,7 @@ void CUiText::CalcDesiredSize(SVector2i AllowedSize)
 
 				LastCutIndex = Index;
 				LastCutIt = CharIt;
-				CuttingTextIndex.push_back(Index);
+				CuttingTextIndexes.push_back(Index);
 				CurrentSize = 0;
 			}
 
@@ -176,22 +176,22 @@ void CUiText::CalcDesiredSize(SVector2i AllowedSize)
 
 				if (LastCutIndex > 0)
 				{
-					if (!CuttingTextIndex.empty() && CuttingTextIndex.back() == LastCutIndex)
+					if (!CuttingTextIndexes.empty() && CuttingTextIndexes.back() == LastCutIndex)
 					{
-						CuttingTextIndex.push_back(Index);
+						CuttingTextIndexes.push_back(Index);
 						LastCutIndex = Index;
 						LastCutIt = CharIt;
 					}
 					else
 					{
-						CuttingTextIndex.push_back(LastCutIndex);
+						CuttingTextIndexes.push_back(LastCutIndex);
 						CharIt = LastCutIt;
 						Index = LastCutIndex;
 					}
 				}
 				else
 				{
-					CuttingTextIndex.push_back(Index);
+					CuttingTextIndexes.push_back(Index);
 				}
 				CurrentSize = 0;
 			}
@@ -216,42 +216,52 @@ void CUiText::Draw(SUiDrawVisitor& DrawVisitor)
 				SetFont(Font.Font, BLACK);
 			}
 
-			int FontSize = Font.IsValid() ? Font.Font->size : 30;
-			int StartY = DrawVisitor.AtLocation.Y;//- FontSize / 2;
+			const int FontSize = Font.IsValid() ? Font.Font->size : 30;
 
-			if (CuttingTextIndex.empty())
+			if (CuttingTextIndexes.empty())
 			{
-				DrawString(DrawVisitor.AtLocation.X, StartY, Text.c_str());
+				if (FontSize / 2 >= DrawVisitor.StartHeight && FontSize / 2 < DrawVisitor.MaxAllowedHeight)
+				{
+					DrawString(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, Text.c_str());
+					DrawVisitor.MarkHasDrawn(this, SRect(DrawVisitor.AtLocation, DrawVisitor.AtLocation + DesiredSize));
+				}
 			}
 			else
 			{
-				int CurrentSize = 0;
+				int StartY = DrawVisitor.AtLocation.Y;
+				int CurrentHeight = 0;
 				int LastCutIndex = -1;
-				for (int Index = 0; Index < CuttingTextIndex.size(); ++Index)
+				for (int Index = 0; Index < CuttingTextIndexes.size(); ++Index)
 				{
-					int CutIndex = CuttingTextIndex[Index];
+					int CutIndex = CuttingTextIndexes[Index];
 					std::string StringPart = Text.substr(LastCutIndex + 1, CutIndex - (LastCutIndex+1));
-					if (CurrentSize + FontSize >= DrawVisitor.StartHeight && CurrentSize + FontSize <= DrawVisitor.MaxAllowedHeight)
+					if (CurrentHeight + FontSize / 2 >= DrawVisitor.StartHeight && CurrentHeight + FontSize / 2 < DrawVisitor.MaxAllowedHeight)
 					{
-						DrawString(DrawVisitor.AtLocation.X, StartY + CurrentSize - DrawVisitor.StartHeight, StringPart.c_str());
+						DrawString(DrawVisitor.AtLocation.X, StartY + CurrentHeight, StringPart.c_str());
+						DrawVisitor.MarkHasDrawn(this, SRect(SVector2i(DrawVisitor.AtLocation.X, StartY + CurrentHeight), SVector2i(DrawVisitor.AtLocation.X, StartY + CurrentHeight) + SVector2i(DesiredSize.X, FontSize)));
 					}
-					CurrentSize += FontSize;
+					CurrentHeight += FontSize;
 					LastCutIndex = CutIndex;
 				}
 				std::string StringPart = Text.substr(LastCutIndex + 1, Text.size() - (LastCutIndex+1));
-				if (CurrentSize + FontSize >= DrawVisitor.StartHeight && CurrentSize + FontSize <= DrawVisitor.MaxAllowedHeight)
+				if (CurrentHeight + FontSize / 2 >= DrawVisitor.StartHeight && CurrentHeight + FontSize / 2 < DrawVisitor.MaxAllowedHeight)
 				{
-					DrawString(DrawVisitor.AtLocation.X, StartY + CurrentSize - DrawVisitor.StartHeight, StringPart.c_str());
+					DrawString(DrawVisitor.AtLocation.X, StartY + CurrentHeight, StringPart.c_str());
+					DrawVisitor.MarkHasDrawn(this, SRect(SVector2i(DrawVisitor.AtLocation.X, StartY + CurrentHeight), SVector2i(DrawVisitor.AtLocation.X, StartY + CurrentHeight) + SVector2i(DesiredSize.X, FontSize)));
 				}
-				CurrentSize += FontSize;
+				CurrentHeight += FontSize;
 			}
-			DrawVisitor.MarkHasDrawn(this, SRect(DrawVisitor.AtLocation, DrawVisitor.AtLocation + DesiredSize));
 		}
 		/*bNeedRedraw = false;*/
 
 		if (bIsEditable)
 		{
 			DrawVisitor.SetInteractable(this, SRect(DrawVisitor.AtLocation, DrawVisitor.AtLocation + DesiredSize));
+		}
+
+		if (bIsPushed)
+		{
+			DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DesiredSize.X, DesiredSize.Y, 128);
 		}
 	}
 	
@@ -292,6 +302,9 @@ void CUiText::OnClick()
 
 void CUiText::OnEdited(char* InText)
 {
+	if (!InText)
+		return;
+
 	//transform to int
 	std::string NewText = InText;
 

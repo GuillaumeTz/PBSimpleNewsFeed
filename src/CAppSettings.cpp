@@ -16,18 +16,22 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 #include "CAppSettings.h"
 
+#include "ui/CUiWidget.h"
+
 #include "tinyxml2.h"
 #include <sstream>
 
 CAppSettings::CAppSettings()
 {
-	MaxEntryToKeepByFeed = 200;
+	MaxEntryToKeepByFeed = 100;
 	PathToOPML = FLASHDIR "/Dropbox PocketBook/subscriptions.opml";
 	PathToSavedOPML = APP_FOLDER "/savedOPML.xml";
 	ConfigFilePath = APP_FOLDER "/config.xml";
 	bSynchronizeAtStart = false;
 	ResolutionWidth = ScreenWidth();
 	ResolutionHeight = ScreenHeight();
+	OffsetTop = 100;
+	OffsetBottom = 100;
 }
 
 void CAppSettings::LoadConfig()
@@ -77,28 +81,32 @@ void CAppSettings::LoadConfig()
 	ResolutionHeight = std::max(ResolutionHeight, 640);
 	ResolutionHeight = std::min(ResolutionHeight, ScreenHeight());
 
-	std::cout << "Resolution : " << ResolutionWidth << " x " << ResolutionHeight << std::endl;
-
 	icanvas* Canvas = GetCanvas();
-	float CoeffWidth = float(Canvas->width) / 600.f;
+	CInkViewInterface::Scale = float(Canvas->width) / 600.f;
 
-	MenuButtonFont = CUiFont(DEFAULTFONT, int(28.f * CoeffWidth));
-	DefaultFont = CUiFont(DEFAULTFONT, int(20.f * CoeffWidth));
-	FeedUnReadFont = CUiFont(DEFAULTFONTB, int(20.f * CoeffWidth));
-	FeedReadFont = CUiFont(DEFAULTFONT, int(20.f * CoeffWidth));
+	std::cerr << "Resolution : " << ResolutionWidth << " x " << ResolutionHeight << " scale " << CInkViewInterface::Scale << std::endl;
+	std::cerr << "Canvas size : " << Canvas->width << " x " << Canvas->height << " ClipX " << Canvas->clipx1 << " => " << Canvas->clipx2 << " ClipY" << Canvas->clipy1 << " = > " << Canvas->clipy2 << std::endl;
 
-	InterlineDateFont = CUiFont(DEFAULTFONT, int(16.f * CoeffWidth));
+	ResolutionWidth = Canvas->width;
+	ResolutionHeight = Canvas->height;
 
-	EntryTitleFont = CUiFont(DEFAULTFONT, int(24.f * CoeffWidth));
-	EntryTitleFontBold = CUiFont(DEFAULTFONTB, int(24.f * CoeffWidth));
-	EntryTextFont = CUiFont(DEFAULTFONT, int(16.f * CoeffWidth));
-	EntryTextFontBold = CUiFont(DEFAULTFONTB, int(16.f * CoeffWidth));
-	EntryTextLinkFont = CUiFont(DEFAULTFONTB, int(16.f * CoeffWidth));
+	MenuButtonFont = CUiFont(DEFAULTFONT, int(28.f * CInkViewInterface::Scale));
+	DefaultFont = CUiFont(DEFAULTFONT, int(20.f * CInkViewInterface::Scale));
+	FeedUnReadFont = CUiFont(DEFAULTFONTB, int(20.f * CInkViewInterface::Scale));
+	FeedReadFont = CUiFont(DEFAULTFONT, int(20.f * CInkViewInterface::Scale));
 
-	FeedPathFont = CUiFont(DEFAULTFONTI, int(16.f * CoeffWidth));
-	SwitchViewButtonsFont = CUiFont(DEFAULTFONTB, int(16.f * CoeffWidth));
+	InterlineDateFont = CUiFont(DEFAULTFONT, int(16.f * CInkViewInterface::Scale));
 
-	ContextMenuFont = CUiFont(DEFAULTFONT, int(20.f * CoeffWidth));
+	EntryTitleFont = CUiFont(DEFAULTFONT, int(24.f * CInkViewInterface::Scale));
+	EntryTitleFontBold = CUiFont(DEFAULTFONTB, int(24.f * CInkViewInterface::Scale));
+	EntryTextFont = CUiFont(DEFAULTFONT, int(16.f * CInkViewInterface::Scale));
+	EntryTextFontBold = CUiFont(DEFAULTFONTB, int(16.f * CInkViewInterface::Scale));
+	EntryTextLinkFont = CUiFont(DEFAULTFONTB, int(16.f * CInkViewInterface::Scale));
+
+	FeedPathFont = CUiFont(DEFAULTFONTI, int(16.f * CInkViewInterface::Scale));
+	SwitchViewButtonsFont = CUiFont(DEFAULTFONTB, int(16.f * CInkViewInterface::Scale));
+
+	ContextMenuFont = CUiFont(DEFAULTFONT, int(20.f * CInkViewInterface::Scale));
 }
 
 void CAppSettings::SaveConfig()

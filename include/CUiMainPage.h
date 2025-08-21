@@ -36,10 +36,12 @@ public:
 
 public:
 	CUiText* DownloadCounterText;
+	bool bSyncing;
 
 protected:
 	CUiHorizontalBox* BreadcrumbHBox;
 	CUiVerticalBox* MainVerticalBox;
+	int IndexOfMainElement;
 };
 
 #endif

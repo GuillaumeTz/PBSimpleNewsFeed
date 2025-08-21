@@ -52,7 +52,6 @@ class CApp
 {
 public:
 	static int App_Handler(int type, int par1, int par2);
-	static void Main();
 	static CApp* Get();
 
 public:
@@ -66,17 +65,22 @@ public:
 
 	SHistoryItem LastEntryRead;
 	std::stack<SHistoryItem> History;
-	int NbDownloadFinished;
-	int NbTotalDownload;
 
+#ifndef IVSAPP
 	std::ofstream ErrorFile;
+	std::ofstream OutputFile;
+#endif // IVSAPP
 
 public:
+	static void Main();
 	void Init();
 	void SyncAll();
 	void SyncCurrent();
 	void Sync(std::vector<int> FeedPath);
-	void DLReaderMode();
+	void DLReaderModeCurrent();
+	void DLReaderModeAll();
+	void DLReaderMode(std::vector<int> FeedPath);
+	void MarkAsReadCurrent();
 
 	void OnDLReaderModeFinished();
 

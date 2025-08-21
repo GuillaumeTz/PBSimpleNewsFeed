@@ -116,8 +116,7 @@ void CUiLastEntries::Refresh(const std::vector<int>& InFeedPath)
 				CUiText* UiText = CUiTextAllocator::New();
 				UiText->Font = App->AppSettings.FeedReadFont;
 				UiText->Text = "-----  " + EntryInfo.NewsEntry->Time + "  -----";
-				UiText->Padding.TopLeft.Y = 5;
-				UiText->Padding.BottomRight.Y = 5;
+				UiText->SetPadding(0, 5, 0, 5);
 				UiText->PivotPointRatio.X = 0.5f;
 				AddChild(UiText);
 			}
@@ -126,7 +125,7 @@ void CUiLastEntries::Refresh(const std::vector<int>& InFeedPath)
 		CUiNewsEntryButton* EntryButton = CUiNewsEntryButtonAllocator::New();
 		EntryButton->SetEntry(EntryInfo.FeedPath, EntryInfo.EntryIndex, EntryInfo.Tag);
 		EntryButton->OnPushFunction = std::tr1::bind(&CUiLastEntries::OnOpenEntry, this, std::tr1::placeholders::_1, EntryInfo.FeedPath, EntryInfo.EntryIndex);
-		EntryButton->Padding.BottomRight.Y = 15;
+		EntryButton->SetBottomPadding(15);
 		AddChild(EntryButton);
 
 		LastEntryTimeDay = std::localtime(&EntryInfo.Time)->tm_yday;

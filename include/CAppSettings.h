@@ -55,6 +55,9 @@ public:
 	int MaxEntryToKeepByFeed;
 	int ResolutionWidth;
 	int ResolutionHeight;
+	int OffsetTop;
+	int OffsetBottom;
+	float CoeffWidth;
 	bool bSynchronizeAtStart;
 
 public:

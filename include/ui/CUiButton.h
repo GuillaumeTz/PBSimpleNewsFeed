@@ -23,6 +23,7 @@ class CUiButton : public CUiWidget
 {
 public:
 	TSharedPtr<CUiWidget> Child;
+	bool bMakePaddingInteractable;
 
 	std::tr1::function<void (CUiButton* /* Button */)> OnPushFunction;
 	std::tr1::function<void (CUiButton* /* Button */)> OnPushProlongedFunction;

@@ -844,6 +844,22 @@ void ClearTimer(iv_timerproc tproc);
 
 // UI functions
 
+ /**
+  * Enum wich can be used for SetPanelType function
+  * @see SetPanelType(int)
+  */
+typedef enum
+{
+	PANEL_DISABLED          = 0,          /**< PANEL is completely off */
+	PANEL_ENABLED           = 1 << 1,     /**< PANEL is on, if any other flag is set panel is treated as active */
+    PANEL_EVENT_NO_HANDLING = 1 << 2,      /**< PANEL is on and could be drawn but it does not handle pointer events,
+	                                        * it is good to use in pair with SetManualPanelUpdates(int enable, iv_panelupdateshandler handler) 
+	                                        * @see SetManualPanelUpdates(int enable, iv_panelupdateshandler handler) 
+	                                        */
+    PANEL_NO_FB_OFFSET = 1 << 3,
+    PANEL_NO_SELF_UPDATE    = 1 << 4,
+} PANEL_FLAGS;
+
 void OpenMenu(imenu *menu, int pos, int x, int y, iv_menuhandler hproc);
 void OpenMenu3x3(const ibitmap *mbitmap, const char *strings[9], iv_menuhandler hproc);
 void OpenList(const char *title, const ibitmap *background, int itemw, int itemh, int itemcount, int cpos, iv_listhandler hproc);

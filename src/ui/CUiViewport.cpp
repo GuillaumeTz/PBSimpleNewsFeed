@@ -65,12 +65,12 @@ void CUiViewport::Draw(bool bUpdate)
 
 	ClearScreen();
 	DrawVisitor = SUiDrawVisitor();
-	DrawVisitor.AllowedSize.X = ScreenWidth();
-	DrawVisitor.AllowedSize.Y = ScreenHeight() - PanelHeight();
+	DrawVisitor.AllowedSize.X = CApp::Get()->AppSettings.ResolutionWidth;
+	DrawVisitor.AllowedSize.Y = CApp::Get()->AppSettings.ResolutionHeight - PanelHeight() - CApp::Get()->AppSettings.OffsetTop - CApp::Get()->AppSettings.OffsetBottom;
 	DrawVisitor.AllowedSize -= RootWidget->GetPaddingSize();
-	DrawVisitor.AtLocation = RootWidget->Padding.TopLeft;
+	DrawVisitor.AtLocation = RootWidget->GetPadding().TopLeft;
 
-	//DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DrawVisitor.ParentSize.X, DrawVisitor.ParentSize.Y, 128);
+	DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DrawVisitor.AllowedSize.X, DrawVisitor.AllowedSize.Y, 128);
 
 	RootWidget->CalcDesiredSize(DrawVisitor.AllowedSize);
 	RootWidget->Draw(DrawVisitor);
@@ -83,7 +83,7 @@ void CUiViewport::Draw(bool bUpdate)
 	{
 		const SRect& DirtyRect(It->second);
 		BigZone.ExtendTo(DirtyRect);
-		//std::cerr << "Dirty " << DirtyRect.TopLeft.X << " " << DirtyRect.TopLeft.Y << " " << DirtyRect.BottomRight.X - DirtyRect.TopLeft.X << " " << DirtyRect.BottomRight.Y - DirtyRect.TopLeft.Y << std::endl;
+		//std::cout << "Dirty " << DirtyRect.TopLeft.X << " " << DirtyRect.TopLeft.Y << " " << DirtyRect.BottomRight.X - DirtyRect.TopLeft.X << " " << DirtyRect.BottomRight.Y - DirtyRect.TopLeft.Y << std::endl;
 		//PartialUpdate(DirtyRect.TopLeft.X, DirtyRect.TopLeft.Y, DirtyRect.BottomRight.X - DirtyRect.TopLeft.X, DirtyRect.BottomRight.Y - DirtyRect.TopLeft.Y);
 	}
 
@@ -95,7 +95,7 @@ void CUiViewport::Draw(bool bUpdate)
 		{
 			const SRect& DirtyRect(It->second);
 			BigZone.ExtendTo(DirtyRect);
-			//std::cerr << "Remove " << DirtyRect.TopLeft.X << " " << DirtyRect.TopLeft.Y << " " << DirtyRect.BottomRight.X - DirtyRect.TopLeft.X << " " << DirtyRect.BottomRight.Y - DirtyRect.TopLeft.Y << std::endl;
+			//std::cout << "Remove " << DirtyRect.TopLeft.X << " " << DirtyRect.TopLeft.Y << " " << DirtyRect.BottomRight.X - DirtyRect.TopLeft.X << " " << DirtyRect.BottomRight.Y - DirtyRect.TopLeft.Y << std::endl;
 			//PartialUpdate(DirtyRect.TopLeft.X, DirtyRect.TopLeft.Y, DirtyRect.BottomRight.X - DirtyRect.TopLeft.X, DirtyRect.BottomRight.Y - DirtyRect.TopLeft.Y);
 		}
 	}
@@ -103,17 +103,16 @@ void CUiViewport::Draw(bool bUpdate)
 	if (!BigZone.bIsValid)
 		return;
 
-	BigZone.Clamp(SVector2i(0), DrawVisitor.AllowedSize);
 	BigZone.Clamp(SVector2i(0), SVector2i(ScreenWidth() - 1, ScreenHeight() - 1));
 
-	std::cerr << "PartialUpdate " << BigZone.TopLeft.X << " " << BigZone.TopLeft.Y << " " << BigZone.BottomRight.X - BigZone.TopLeft.X << " " << BigZone.BottomRight.Y - BigZone.TopLeft.Y << std::endl;
+	// std::cout << "PartialUpdate " << BigZone.TopLeft.X << " " << BigZone.TopLeft.Y << " " << BigZone.BottomRight.X - BigZone.TopLeft.X << " " << BigZone.BottomRight.Y - BigZone.TopLeft.Y << std::endl;
 	PartialUpdate(BigZone.TopLeft.X, BigZone.TopLeft.Y, BigZone.BottomRight.X - BigZone.TopLeft.X, BigZone.BottomRight.Y - BigZone.TopLeft.Y);
-	std::cerr << "End PartialUpdate " << BigZone.TopLeft.X << " " << BigZone.TopLeft.Y << " " << BigZone.BottomRight.X - BigZone.TopLeft.X << " " << BigZone.BottomRight.Y - BigZone.TopLeft.Y << std::endl;
+	// std::cout << "End PartialUpdate " << BigZone.TopLeft.X << " " << BigZone.TopLeft.Y << " " << BigZone.BottomRight.X - BigZone.TopLeft.X << " " << BigZone.BottomRight.Y - BigZone.TopLeft.Y << std::endl;
 }
 
 CUiWidget* CUiViewport::GetWidgetUnder(const SVector2i Coord) const
 {
-	//std::cerr << "GetWidgetUnder " << Coord.X << " " << Coord.Y << std::endl;
+	//std::cout << "GetWidgetUnder " << Coord.X << " " << Coord.Y << std::endl;
 	std::vector<CUiWidget*> Candidates;
 	for (auto It = DrawVisitor.InteractableZones.rbegin(); It != DrawVisitor.InteractableZones.rend(); ++It)
 	{
