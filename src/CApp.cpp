@@ -722,7 +722,7 @@ void CApp::OpenReaderMode(std::vector<int> FeedPath, int EntryIndex)
 	CUiReaderModeBrowser* ReaderMode = new CUiReaderModeBrowser();
 	MainPage->SetMainElement(ReaderMode);
 	MainPage->SetPath(FeedPath);
-	ReaderMode->ShowUrl(NewsEntry.Link, 0, false, Feed);
+	ReaderMode->ShowUrl(!NewsEntry.ExternalLink.empty() ? NewsEntry.ExternalLink : NewsEntry.Link, 0, false, Feed);
 
 	//Draw();
 	History.push(SHistoryItem());

@@ -52,7 +52,7 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 	NewsEntry.bIsNew = false;
 
 	const bool bIsReddit = NewsEntry.Link.find("www.reddit.com") != std::string::npos;
-	const CDownload ReaderModeDownload = bIsReddit ? CApp::GetReaderModeDownloadFor(NewsEntry.ExternalLink, CurrentFeed) : CApp::GetReaderModeDownloadFor(NewsEntry.Link, CurrentFeed);
+	const CDownload ReaderModeDownload = CApp::GetReaderModeDownloadFor(NewsEntry.Link, CurrentFeed);
 	const bool bReaderModeFileDLed = CApp::IsFileValid(ReaderModeDownload.GetFilePath().c_str());
 
 	{
@@ -64,17 +64,10 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 		UiText->Font = App->AppSettings.EntryTitleFontBold;
 		UiText->Text = NewsEntry.Title;
 
-		CUiButton* ButtonOpenExternalLink = new CUiButton();
-		ButtonOpenExternalLink->Child = UiText;
-		ButtonOpenExternalLink->OnPushFunction = std::tr1::bind(&CUiEntryPage::OnOpenExternalLink, this);
-		TitleHorizontalBox->AddChild(ButtonOpenExternalLink);
-
-		//{
-		//	PageNumText = CUiTextAllocator::New();
-		//	PageNumText->Font = App->AppSettings.EntryTextFont;
-		//	PageNumText->Padding.TopLeft.X = 50;
-		//	TitleHorizontalBox->AddChild(*PageNumText);
-		//}
+		//CUiButton* ButtonOpenExternalLink = new CUiButton();
+		//ButtonOpenExternalLink->Child = UiText;
+		//ButtonOpenExternalLink->OnPushFunction = std::tr1::bind(&CUiEntryPage::OnOpenExternalLink, this);
+		TitleHorizontalBox->AddChild(UiText);
 	}
 
 	{
@@ -97,7 +90,7 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 			HorizontalBox->AddChild(IndexEntryInAllText);
 		}
 
-		if (!bIsReddit)
+		if (!bIsReddit || !NewsEntry.ExternalLink.empty())
 		{
 			CUiText* UiText = CUiTextAllocator::New();
 			UiText->Font = App->AppSettings.EntryTextFontBold;
@@ -109,7 +102,8 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 			ButtonOpenExternalLink->PivotPointRatio.X = 1.f;
 			HorizontalBox->AddChild(ButtonOpenExternalLink);
 		}
-		else
+		
+		if (bIsReddit)
 		{
 			CUiText* UiText = CUiTextAllocator::New();
 			UiText->Font = App->AppSettings.EntryTextFontBold;
@@ -129,41 +123,43 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 	{
 		if (bReaderModeFileDLed)
 		{
-			//if this is a link to an external link then display it
-			if (!NewsEntry.ExternalLink.empty())
-			{
-				CDownload ExternalLinkDownload = CApp::GetReaderModeDownloadFor(NewsEntry.ExternalLink, CurrentFeed);
-				if (CApp::IsFileValid(ExternalLinkDownload.GetFilePath().c_str()))
-				{
-					CUiReaderModeBrowser* ReaderModeBrowser = new CUiReaderModeBrowser();
-					ReaderModeBrowser->ShowUrl(NewsEntry.ExternalLink, 0, false, CurrentFeed);
-					AddChild(ReaderModeBrowser);
-				}
-			}
-
 			CNewsFeed CommentFeed;
 			CommentFeed.LoadDocument(ReaderModeDownload.GetFilePath());
 			for (int Index = 0; Index < CommentFeed.Entries.size(); ++Index)
 			{
 				const CNewsEntry& CommentEntry(CommentFeed.Entries[Index]);
 
-				if (Index > 0)
+				std::string UserName;
+				const bool bIsFirst = Index == 0;
+
+				const size_t SubmittedByPos = CommentEntry.Text.rfind("submitted by ");
+				if (bIsFirst)
 				{
-					CUiText* UiText = CUiTextAllocator::New();
-					UiText->Font = App->AppSettings.EntryTextFontBold;
-					std::string UserName = CommentEntry.Title;
+					if (SubmittedByPos != std::string::npos)
+					{
+						UserName = CommentEntry.Text.substr(SubmittedByPos + 13);
+						const size_t UPos = UserName.find("/u/");
+						UserName = UserName.substr(UPos + 3, UserName.find(" ", UPos + 3) - (UPos + 3));
+					}
+				}
+				else
+				{
+					UserName = CommentEntry.Title;
 					CApp::ReplaceAll(UserName, NewsEntry.Title, "");
 					CApp::ReplaceAll(UserName, " on ", "");
 					CApp::ReplaceAll(UserName, "/u/", "");
-					UiText->Text = UserName + "    (" + CommentEntry.Time + ")";
-					AddChild(UiText);
 				}
+
+				CUiText* UiText = CUiTextAllocator::New();
+				UiText->Font = App->AppSettings.EntryTextFontBold;
+				UiText->Text = UserName + "    (" + CommentEntry.Time + ")";
+				AddChild(UiText);
 
 				CUiText* UiHtml = CUiTextAllocator::New();
 				UiHtml->Font = App->AppSettings.EntryTextFont;
 				UiHtml->SetPadding(10, 0, 10, 0);
 				UiHtml->SetBottomPadding(15);
-				UiHtml->SetHtml(CommentEntry.Text);
+				UiHtml->SetHtml(bIsFirst ? CommentEntry.Text.substr(0, SubmittedByPos) : CommentEntry.Text);
 				AddChild(UiHtml);
 			}
 		}

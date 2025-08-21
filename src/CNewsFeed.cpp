@@ -123,8 +123,9 @@ void CNewsEntry::ParseElement(tinyxml2::XMLElement* InXmlElement)
 	InXmlElement->QueryBoolAttribute("HasRead", &bHasRead);
 
 	ExternalLink = "";
-	if (Link.find("www.reddit.com") != std::string::npos && Text.find("submitted by") <= 10)
+	if (Link.find("www.reddit.com") != std::string::npos && Text.find("<p>") == std::string::npos)
 	{
+		std::cerr << "Reddit external link " << std::endl;
 		//if reddit and no text this is an external link
 		size_t SpanPos = Text.find("<span>");
 		if (SpanPos != std::string::npos)
@@ -137,6 +138,7 @@ void CNewsEntry::ParseElement(tinyxml2::XMLElement* InXmlElement)
 				if (EndLinkPos != std::string::npos)
 				{
 					ExternalLink = Text.substr(HRefPos + 6, EndLinkPos - (HRefPos + 6));
+					std::cerr << ExternalLink << std::endl;
 				}
 			}
 		}
