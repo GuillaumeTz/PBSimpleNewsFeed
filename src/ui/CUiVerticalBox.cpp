@@ -113,11 +113,6 @@ void CUiVerticalBox::PreviousPage()
 	CurrentPage = std::max(0, CurrentPage - 1);
 }
 
-bool CUiVerticalBox::HasMultiplePages() const
-{
-	return MaxPage > 1;
-}
-
 bool CUiVerticalBox::CanNextPage() const
 {
 	return CurrentPage + 1 < MaxPage;

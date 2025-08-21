@@ -50,8 +50,15 @@ public:
 	void OnDownloadFinished(bool bIsFromDownload);
 
 	virtual void Draw(SUiDrawVisitor& DrawVisitor) override;
+	virtual bool CanNextPage() const override { return SubVerticalBox->CanNextPage(); }
+	virtual void NextPage() override { return SubVerticalBox->NextPage(); }
+	virtual bool CanPreviousPage() const override { return SubVerticalBox->CanPreviousPage(); }
+	virtual void PreviousPage() override { return SubVerticalBox->PreviousPage(); }
+	virtual int GetPageIndex() const override { return SubVerticalBox->GetPageIndex(); }
+	virtual void SetPageIndex(int InIndexPage) override { SubVerticalBox->SetPageIndex(InIndexPage); }
 
 private:
+	TSharedPtr<CUiVerticalBox> SubVerticalBox;
 	std::stack<SReaderModeBrowserHistoryItem> HistoryUrls;
 	std::string Url;
 	std::string LocalFilePath;

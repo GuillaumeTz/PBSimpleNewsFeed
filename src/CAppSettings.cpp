@@ -102,6 +102,7 @@ void CAppSettings::LoadConfig()
 	EntryTextFont = CUiFont(DEFAULTFONT, int(16.f * CInkViewInterface::Scale));
 	EntryTextFontBold = CUiFont(DEFAULTFONTB, int(16.f * CInkViewInterface::Scale));
 	EntryTextLinkFont = CUiFont(DEFAULTFONTB, int(16.f * CInkViewInterface::Scale));
+	ReallySmallFont = CUiFont(DEFAULTFONT, int(10.f * CInkViewInterface::Scale));
 
 	FeedPathFont = CUiFont(DEFAULTFONTI, int(16.f * CInkViewInterface::Scale));
 	SwitchViewButtonsFont = CUiFont(DEFAULTFONTB, int(16.f * CInkViewInterface::Scale));

@@ -414,7 +414,7 @@ std::vector<CDownload> CNewsFeed::Sync()
 		std::cout << "Newsfeed sync :" << this->Url << std::endl;
 		std::string FixedUrl = Url;
 		//fix for reddit
-		if (FixedUrl.find("https://www.reddit.com/r/") != std::string::npos || FixedUrl.find("reddit.com/r/") != std::string::npos && FixedUrl.find("/new/.rss") == std::string::npos)
+		if ((FixedUrl.find("https://www.reddit.com/r/") != std::string::npos || FixedUrl.find("reddit.com/r/") != std::string::npos) && FixedUrl.find("/new/.rss") == std::string::npos)
 		{
 			CApp::ReplaceAll(FixedUrl, "/.rss", "/new/.rss?limit=50");
 		}

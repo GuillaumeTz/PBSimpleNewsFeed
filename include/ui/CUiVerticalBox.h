@@ -28,19 +28,14 @@ public:
 	CUiVerticalBox();
 	virtual ~CUiVerticalBox();
 
-	void NextPage();
-	void PreviousPage();
-
-	bool HasMultiplePages() const;
-	bool CanNextPage() const;
-	bool CanPreviousPage() const;
-
-	int GetPageIndex() const { return CurrentPage; }
-	void SetPageIndex(int InIndexPage) { CurrentPage = InIndexPage; }
-	int GetMaxPageIndex() const { return MaxPage; }
-	
+	virtual int GetPageIndex() const override { return CurrentPage; }
+	virtual void SetPageIndex(int InIndexPage) override { CurrentPage = InIndexPage; }
 	virtual void CalcDesiredSize(SVector2i AllowedSize) override;
 	virtual void Draw(SUiDrawVisitor& DrawVisitor) override;
+	virtual bool CanNextPage() const override;
+	virtual void NextPage() override;
+	virtual bool CanPreviousPage() const override;
+	virtual void PreviousPage() override;
 
 private:
 	int CurrentPage;

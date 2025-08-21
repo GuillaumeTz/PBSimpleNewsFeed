@@ -46,6 +46,7 @@ public:
 	CUiFont EntryTextFont;
 	CUiFont EntryTextFontBold;
 	CUiFont EntryTextLinkFont;
+	CUiFont ReallySmallFont;
 
 	CUiFont ContextMenuFont;
 

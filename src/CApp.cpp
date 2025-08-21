@@ -616,7 +616,6 @@ void CApp::OpenMainPage()
 
 	Save();
 
-	ClearScreen();
 	Viewport.RemoveAllOverlayWidgets();
 	Viewport.AddOverlayWidget(*MainPage);
 	MainPage->Refresh();
@@ -643,8 +642,6 @@ void CApp::OpenFeed(std::vector<int> FeedPath, int PageIndex, bool bShowLastEntr
 		std::cerr << "OpenFeed " << FeedPath.back() << std::endl;
 	}
 	
-	ClearScreen();
-
 	CNewsFeed* CurrentFeed = GetFeed(FeedPath);
 	if (CurrentFeed->bIsFolder)
 	{
@@ -692,7 +689,6 @@ void CApp::OpenEntry(std::vector<int> FeedPath, int EntryIndex, int PageIndex)
 {
 	std::cerr << "OpenEntry " << FeedPath.back() << " " << EntryIndex << std::endl;
 	
-	ClearScreen();
 	CUiEntryPage* EntryPage = new CUiEntryPage();
 	MainPage->SetMainElement(EntryPage);
 	EntryPage->SetPageIndex(PageIndex);
@@ -739,7 +735,6 @@ void CApp::OpenSettingsPage()
 	Viewport.AddOverlayWidget(*SettingsPage);
 	SettingsPage->Refresh();
 
-	ClearScreen();
 	Draw();
 }
 
@@ -756,7 +751,6 @@ void CApp::ShowFolders()
 	UiFeedList->SetPageIndex(HistItem.PageIndex);
 	UiFeedList->Refresh(HistItem.FeedPath);
 
-	ClearScreen();
 	Draw();
 
 	HistItem.bIsLastEntriesDisplay = false;
@@ -775,7 +769,6 @@ void CApp::ShowLastEntries()
 	LastEntries->SetPageIndex(HistItem.LastEntriesPageIndex);
 	MainPage->SetMainElement(LastEntries);
 
-	ClearScreen();
 	Draw();
 
 	HistItem.bIsLastEntriesDisplay = true;
@@ -1028,7 +1021,7 @@ void CApp::SetFocusOn(CUiWidget* InFocusedWidget)
 void CApp::NextPage()
 {
 	CUiWidget* Widget = MainPage->GetMainElement();
-	if (Widget && Widget->As<CUiVerticalBox>() && Widget->As<CUiVerticalBox>()->CanNextPage())
+	if (Widget && Widget->CanNextPage())
 	{
 		Widget->As<CUiVerticalBox>()->NextPage();
 		if (!History.empty())
@@ -1067,7 +1060,7 @@ void CApp::NextPage()
 void CApp::PreviousPage()
 {
 	CUiWidget* Widget = MainPage->GetMainElement();
-	if (Widget && Widget->As<CUiVerticalBox>() && Widget->As<CUiVerticalBox>()->CanPreviousPage())
+	if (Widget && Widget->CanPreviousPage())
 	{
 		Widget->As<CUiVerticalBox>()->PreviousPage();
 		if (!History.empty())

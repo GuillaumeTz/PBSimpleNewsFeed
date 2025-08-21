@@ -124,6 +124,8 @@ public:
 	const ClassType* Get() const { return Ptr; }
 	ClassType* operator->() { return Ptr; }
 	ClassType* operator*() { return Ptr; }
+	const ClassType* operator->() const { return Ptr; }
+	const ClassType* operator*() const { return Ptr; }
 
 	operator bool() const { return Ptr != 0; }
 

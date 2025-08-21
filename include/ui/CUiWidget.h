@@ -139,6 +139,13 @@ public:
 	virtual void OnFocusPathChangedBelow() { }
 	virtual std::vector<SUiContextMenuOption> GetContextMenuOptions() { return {}; };
 
+	virtual bool CanNextPage() const { return false; }
+	virtual void NextPage() {}
+	virtual bool CanPreviousPage() const { return false; }
+	virtual void PreviousPage() {}
+	virtual int GetPageIndex() const { return 0; }
+	virtual void SetPageIndex(int InIndexPage) { }
+
 	template<class ClassType>
 	ClassType* As()
 	{

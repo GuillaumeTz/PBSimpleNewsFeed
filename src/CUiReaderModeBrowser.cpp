@@ -31,12 +31,14 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 CUiReaderModeBrowser::CUiReaderModeBrowser() : CUiVerticalBox()
 {
-	bSupportMultiplePages = true;
 	Feed = nullptr;
 	bIsDownloading = false;
 	Feed = NULL;
 	RefreshButton = NULL;
 	BackButton = NULL;
+
+	SubVerticalBox = new CUiVerticalBox();
+	SubVerticalBox->bSupportMultiplePages = true;
 
 	DebugName = "UiReaderModeBrowser";
 }
@@ -64,18 +66,34 @@ void CUiReaderModeBrowser::ShowUrl(const std::string& InUrl, int InPageIndex, bo
 
 	ClearChildren();
 
-	if (!Title.empty())
+	//if (!Title.empty())
+	//{
+	//	CUiText* UiText = CUiTextAllocator::New();
+	//	UiText->Font = App->AppSettings.EntryTitleFontBold;
+	//	UiText->Text = Title;
+	//	UiText->SetBottomPadding(15);
+	//	SubVerticalBox->AddChild(UiText);
+	//}
+
+	CUiHorizontalBox* BarHBox = new CUiHorizontalBox();
+	BarHBox->bFillWidth = true;
+	BarHBox->SetBottomPadding(10);
+	AddChild(BarHBox);
+
+	if (!Url.empty())
 	{
-		CUiText* UiText = CUiTextAllocator::New();
-		UiText->Font = App->AppSettings.EntryTitleFontBold;
-		UiText->Text = Title;
-		UiText->SetBottomPadding(15);
-		AddChild(UiText);
+		CUiHorizontalBox* HorizontalBox = new CUiHorizontalBox();
+		BarHBox->AddChild(HorizontalBox);
+		CUiText* UrlText = CUiTextAllocator::New();
+		UrlText->Font = App->AppSettings.ReallySmallFont;
+		UrlText->Text = Url;
+		HorizontalBox->AddChild(UrlText);
 	}
 
 	{
 		CUiHorizontalBox* HorizontalBox = new CUiHorizontalBox();
 		HorizontalBox->PivotPointRatio.X = 1.f;
+		BarHBox->AddChild(HorizontalBox);
 		{
 			if (!BackButton)
 			{
@@ -115,10 +133,10 @@ void CUiReaderModeBrowser::ShowUrl(const std::string& InUrl, int InPageIndex, bo
 			
 			HorizontalBox->AddChild(*RefreshButton);
 		}
-
-		HorizontalBox->SetBottomPadding(15);
-		AddChild(HorizontalBox);
 	}
+
+	SubVerticalBox->ClearChildren();
+	AddChild(*SubVerticalBox);
 
 	if (!bIsDownloading)
 	{
@@ -127,8 +145,7 @@ void CUiReaderModeBrowser::ShowUrl(const std::string& InUrl, int InPageIndex, bo
 	}
 	else
 	{
-		//std::string Info = "Dowloading " + InUrl;
-		//OpenProgressbar(0, "Downloading article... ", Info.c_str(), 0, 0);
+		std::cerr << "Downloading " << InUrl << std::endl;
 		
 		Download.OnFinished = std::tr1::bind(&CUiReaderModeBrowser::OnDownloadFinished, this, true);
 		CDownloadManager::Get()->AddDownload(Download, true);
@@ -175,8 +192,7 @@ void CUiReaderModeBrowser::Back()
 		{
 			const SReaderModeBrowserHistoryItem TopItem = HistoryUrls.top();
 			HistoryUrls.pop();
-			ShowUrl(TopItem.Url, false, Feed);
-			SetPageIndex(TopItem.PageIndex);
+			ShowUrl(TopItem.Url, TopItem.PageIndex, false, Feed);
 		}
 	}
 }
@@ -229,11 +245,12 @@ void CUiReaderModeBrowser::OnDownloadFinished(bool bIsFromDownload)
 	charBuffer[size] = 0;
 	iv_fclose(FileDesc);
 
-	std::set<GumboTag> TextuallyRelevantTags = { 
+	std::set<GumboTag> TextuallyRelevantTags = {
 		GUMBO_TAG_ARTICLE, GUMBO_TAG_P, GUMBO_TAG_H1, GUMBO_TAG_H2, GUMBO_TAG_H3, GUMBO_TAG_H4, GUMBO_TAG_H5, GUMBO_TAG_H6
 		, GUMBO_TAG_EM, GUMBO_TAG_STRONG, GUMBO_TAG_B, GUMBO_TAG_I, GUMBO_TAG_MARK, GUMBO_TAG_SMALL
-		, GUMBO_TAG_DEL, GUMBO_TAG_INS, GUMBO_TAG_SUB, GUMBO_TAG_SUP
-		, GUMBO_TAG_BLOCKQUOTE, GUMBO_TAG_Q, GUMBO_TAG_CITE };
+		, GUMBO_TAG_DEL, GUMBO_TAG_INS
+		, GUMBO_TAG_BLOCKQUOTE, GUMBO_TAG_Q, GUMBO_TAG_CITE, GUMBO_TAG_PRE, GUMBO_TAG_CODE, GUMBO_TAG_SAMP, GUMBO_TAG_VAR
+		, GUMBO_TAG_UL, GUMBO_TAG_OL, GUMBO_TAG_DL };
 
 	CUiText* LastUiText = nullptr;
 	bool bAppendToLastUiText = false;
@@ -281,7 +298,7 @@ void CUiReaderModeBrowser::OnDownloadFinished(bool bIsFromDownload)
 							}
 						}
 
-						if (Link.size() > 0)
+						if (Link.size() > 0 && Link.find("#") != 0)
 						{
 							CUiText* UiText = CUiTextAllocator::New();
 							UiText->Font = App->AppSettings.EntryTextLinkFont;
@@ -292,13 +309,29 @@ void CUiReaderModeBrowser::OnDownloadFinished(bool bIsFromDownload)
 
 							CUiButton* Button = new CUiButton();
 							Button->Child = UiText;
+							if (Link.find("http") != 0)
+							{
+								if (Link.find("/") == 0)
+								{
+									const size_t IndexOfProtocolStandard = Url.find("://");
+									if (IndexOfProtocolStandard != std::string::npos)
+									{
+										Link = Url.substr(0, Url.find("/", IndexOfProtocolStandard + 3)) + Link;
+									}
+								}
+								else
+								{
+									Link = Url + Link;
+								}
+							}
 							Button->OnPushFunction = std::tr1::bind(&CUiReaderModeBrowser::ShowUrl, this, Link, 0, false, Feed);
-							AddChild(Button);
+							SubVerticalBox->AddChild(Button);
 						}
 						break;
 					}
-					case GUMBO_TAG_IMG:
+					case GUMBO_TAG_IMG: case GUMBO_TAG_SUP: case GUMBO_TAG_SUB:
 					{
+						gumboNodeCtx.bInsideTextuallyRelevantTag = false;
 						break;
 					}
 					case GUMBO_TAG_H1: gumboNodeCtx.CoeffFont = 1.5f; break;
@@ -307,7 +340,9 @@ void CUiReaderModeBrowser::OnDownloadFinished(bool bIsFromDownload)
 					case GUMBO_TAG_H4: gumboNodeCtx.CoeffFont = 1.2f; break;
 					case GUMBO_TAG_H5: gumboNodeCtx.CoeffFont = 1.1f; break;
 					case GUMBO_TAG_H6: gumboNodeCtx.CoeffFont = 1.05f; break;
-					case GUMBO_TAG_EM: case GUMBO_TAG_STRONG: case GUMBO_TAG_B: case GUMBO_TAG_I: case GUMBO_TAG_MARK: case GUMBO_TAG_SMALL: case GUMBO_TAG_DEL: case GUMBO_TAG_INS: case GUMBO_TAG_SUB: case GUMBO_TAG_SUP:
+
+					case GUMBO_TAG_EM: case GUMBO_TAG_STRONG: case GUMBO_TAG_B: case GUMBO_TAG_I: case GUMBO_TAG_MARK: case GUMBO_TAG_SMALL: case GUMBO_TAG_DEL: case GUMBO_TAG_INS:
+					case GUMBO_TAG_CODE: case GUMBO_TAG_SAMP: case GUMBO_TAG_VAR: case GUMBO_TAG_UL: case GUMBO_TAG_OL: case GUMBO_TAG_DL:
 						bAppendToLastUiText = true;
 						break;
 					}
@@ -319,11 +354,12 @@ void CUiReaderModeBrowser::OnDownloadFinished(bool bIsFromDownload)
 			{
 				if (gumboNodeCtx.bInsideTextuallyRelevantTag)
 				{
-					//std::string DecodedValue;
-					//DecodedValue.resize(LastTextValue.size());
-					//decode_html_entities_utf8(&DecodedValue[0], &LastTextValue[0]);
-					//CApp::ReplaceAll(DecodedValue, "\r\n", "");
-					//CApp::ReplaceAll(DecodedValue, "\n", "");
+					if (!LastUiText)
+					{
+						bAppendToLastUiText = false;
+						bPreprendToLastUiText = false;
+						bUseLastUIJustOnce = false;
+					}
 
 					if (bAppendToLastUiText || bPreprendToLastUiText)
 					{
@@ -356,7 +392,7 @@ void CUiReaderModeBrowser::OnDownloadFinished(bool bIsFromDownload)
 							UiText->Font = App->AppSettings.EntryTextFont;
 						}
 						UiText->Text = gumboNodeCtx.gumboNode->v.text.text;
-						AddChild(UiText);
+						SubVerticalBox->AddChild(UiText);
 						LastUiText = UiText;
 					}
 				}
@@ -379,7 +415,6 @@ void CUiReaderModeBrowser::OnDownloadFinished(bool bIsFromDownload)
 	gumbo_destroy_output(&kGumboDefaultOptions, gumboOutput);
 	delete[] charBuffer;
 
-	ClearScreen();
 	CApp::Get()->Draw();
 }
 
