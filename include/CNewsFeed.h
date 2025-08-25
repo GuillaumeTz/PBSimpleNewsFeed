@@ -63,6 +63,14 @@ private:
 	ERssType::Type RssType;
 };
 
+struct SReaderModeSettings
+{
+	SReaderModeSettings() : bShowOnlyTextualRelevantTags(true), bHideElementsBeforeFirstPhrase(true) {}
+
+	bool bShowOnlyTextualRelevantTags;
+	bool bHideElementsBeforeFirstPhrase;
+};
+
 class CNewsFeed
 {
 public:
@@ -78,6 +86,7 @@ public:
 	std::vector<CNewsFeed> NewsFeeds;
 	std::vector<CNewsEntry> Entries;
 
+	SReaderModeSettings ReaderModeSettings;
 	std::time_t LastEntryTime;
 	bool bDisplayLastEntryFirst;
 	bool bDeleted;
@@ -92,7 +101,7 @@ public:
 	void LoadFeeds(bool bForce, bool bRecursive);
 	void LoadDocument(bool bForce = false);
 	void LoadDocument(const std::string& InFilePath);
-	void SaveDocument();
+	void SaveDocument(bool bSaveAll);
 
 	void TransferFromOldFeed(const CNewsFeed& OldFeed);
 
@@ -110,6 +119,7 @@ public:
 	const CNewsEntry* FindEntryByUniqueId(const std::string& InUniqueId) const;
 
 	void ParseOutlineElementFromOpml(tinyxml2::XMLElement* OutlineElement);
+	void ClearCache();
 
 private:
 	void ReadRss(tinyxml2::XMLDocument* XmlDoc);

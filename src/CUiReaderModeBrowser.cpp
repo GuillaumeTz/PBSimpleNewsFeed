@@ -31,6 +31,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 CUiReaderModeBrowser::CUiReaderModeBrowser() : CUiVerticalBox()
 {
+	bEnabled = true;
 	Feed = nullptr;
 	bIsDownloading = false;
 	Feed = NULL;
@@ -66,15 +67,6 @@ void CUiReaderModeBrowser::ShowUrl(const std::string& InUrl, int InPageIndex, bo
 
 	ClearChildren();
 
-	//if (!Title.empty())
-	//{
-	//	CUiText* UiText = CUiTextAllocator::New();
-	//	UiText->Font = App->AppSettings.EntryTitleFontBold;
-	//	UiText->Text = Title;
-	//	UiText->SetBottomPadding(15);
-	//	SubVerticalBox->AddChild(UiText);
-	//}
-
 	CUiHorizontalBox* BarHBox = new CUiHorizontalBox();
 	BarHBox->bFillWidth = true;
 	BarHBox->SetBottomPadding(10);
@@ -90,6 +82,7 @@ void CUiReaderModeBrowser::ShowUrl(const std::string& InUrl, int InPageIndex, bo
 		HorizontalBox->AddChild(UrlText);
 	}
 
+	if (bEnabled)
 	{
 		CUiHorizontalBox* HorizontalBox = new CUiHorizontalBox();
 		HorizontalBox->PivotPointRatio.X = 1.f;
@@ -256,6 +249,7 @@ void CUiReaderModeBrowser::OnDownloadFinished(bool bIsFromDownload)
 	bool bAppendToLastUiText = false;
 	bool bUseLastUIJustOnce = false;
 	bool bPreprendToLastUiText = false;
+	bool bHasDetectedFirstPhrase = false;
 
 	GumboOutput* gumboOutput = gumbo_parse(charBuffer);
 	std::deque<GumboNodeContext> NodesToDo = { GumboNodeContext(gumboOutput->root) };
@@ -282,7 +276,7 @@ void CUiReaderModeBrowser::OnDownloadFinished(bool bIsFromDownload)
 				}
 
 				bAppendToLastUiText = false;
-				if (gumboNodeCtx.bInsideTextuallyRelevantTag)
+				if ((gumboNodeCtx.bInsideTextuallyRelevantTag || (Feed && !Feed->ReaderModeSettings.bShowOnlyTextualRelevantTags)))
 				{
 					switch (gumboNodeCtx.gumboNode->v.element.tag)
 					{
@@ -298,7 +292,11 @@ void CUiReaderModeBrowser::OnDownloadFinished(bool bIsFromDownload)
 							}
 						}
 
-						if (Link.size() > 0 && Link.find("#") != 0)
+						if (Link.find("youtube.com/") != std::string::npos)
+						{
+							bAppendToLastUiText = true;
+						}
+						else if (Link.size() > 0 && Link.find("#") != 0)
 						{
 							CUiText* UiText = CUiTextAllocator::New();
 							UiText->Font = App->AppSettings.EntryTextLinkFont;
@@ -324,7 +322,8 @@ void CUiReaderModeBrowser::OnDownloadFinished(bool bIsFromDownload)
 									Link = Url + Link;
 								}
 							}
-							Button->OnPushFunction = std::tr1::bind(&CUiReaderModeBrowser::ShowUrl, this, Link, 0, false, Feed);
+							if (bEnabled)
+								Button->OnPushFunction = std::tr1::bind(&CUiReaderModeBrowser::ShowUrl, this, Link, 0, false, Feed);
 							SubVerticalBox->AddChild(Button);
 						}
 						break;
@@ -334,12 +333,13 @@ void CUiReaderModeBrowser::OnDownloadFinished(bool bIsFromDownload)
 						gumboNodeCtx.bInsideTextuallyRelevantTag = false;
 						break;
 					}
-					case GUMBO_TAG_H1: gumboNodeCtx.CoeffFont = 1.5f; break;
-					case GUMBO_TAG_H2: gumboNodeCtx.CoeffFont = 1.4f; break;
-					case GUMBO_TAG_H3: gumboNodeCtx.CoeffFont = 1.3f; break;
-					case GUMBO_TAG_H4: gumboNodeCtx.CoeffFont = 1.2f; break;
-					case GUMBO_TAG_H5: gumboNodeCtx.CoeffFont = 1.1f; break;
-					case GUMBO_TAG_H6: gumboNodeCtx.CoeffFont = 1.05f; break;
+					case GUMBO_TAG_H1: bHasDetectedFirstPhrase = true; gumboNodeCtx.CoeffFont = 1.5f; break;
+					case GUMBO_TAG_H2: bHasDetectedFirstPhrase = true; gumboNodeCtx.CoeffFont = 1.4f; break;
+					case GUMBO_TAG_H3: bHasDetectedFirstPhrase = true; gumboNodeCtx.CoeffFont = 1.3f; break;
+					case GUMBO_TAG_H4: bHasDetectedFirstPhrase = true; gumboNodeCtx.CoeffFont = 1.2f; break;
+					case GUMBO_TAG_H5: bHasDetectedFirstPhrase = true; gumboNodeCtx.CoeffFont = 1.1f; break;
+					case GUMBO_TAG_H6: bHasDetectedFirstPhrase = true; gumboNodeCtx.CoeffFont = 1.05f; break;
+					case GUMBO_TAG_P: bHasDetectedFirstPhrase = true; break;
 
 					case GUMBO_TAG_EM: case GUMBO_TAG_STRONG: case GUMBO_TAG_B: case GUMBO_TAG_I: case GUMBO_TAG_MARK: case GUMBO_TAG_SMALL: case GUMBO_TAG_DEL: case GUMBO_TAG_INS:
 					case GUMBO_TAG_CODE: case GUMBO_TAG_SAMP: case GUMBO_TAG_VAR: case GUMBO_TAG_UL: case GUMBO_TAG_OL: case GUMBO_TAG_DL:
@@ -352,7 +352,16 @@ void CUiReaderModeBrowser::OnDownloadFinished(bool bIsFromDownload)
 			}
 			case GUMBO_NODE_TEXT:
 			{
-				if (gumboNodeCtx.bInsideTextuallyRelevantTag)
+				// try to detect a the first phrase of the doc
+				std::string Text = gumboNodeCtx.gumboNode->v.text.text;
+				if (!bHasDetectedFirstPhrase)
+				{
+					bHasDetectedFirstPhrase = std::count(Text.begin(), Text.end(), ' ') > 2 && Text.find_first_of(".,!?");
+				}
+
+				if ((!Feed || !Feed->ReaderModeSettings.bHideElementsBeforeFirstPhrase || bHasDetectedFirstPhrase)
+					&& (gumboNodeCtx.bInsideTextuallyRelevantTag || (Feed && !Feed->ReaderModeSettings.bShowOnlyTextualRelevantTags))
+					)
 				{
 					if (!LastUiText)
 					{
@@ -391,7 +400,7 @@ void CUiReaderModeBrowser::OnDownloadFinished(bool bIsFromDownload)
 							UiText->SetPadding(5, 0, 5, 5);
 							UiText->Font = App->AppSettings.EntryTextFont;
 						}
-						UiText->Text = gumboNodeCtx.gumboNode->v.text.text;
+						UiText->Text = std::move(Text);
 						SubVerticalBox->AddChild(UiText);
 						LastUiText = UiText;
 					}

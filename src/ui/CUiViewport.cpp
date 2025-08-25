@@ -70,7 +70,7 @@ void CUiViewport::Draw(bool bUpdate)
 	DrawVisitor.AllowedSize -= RootWidget->GetPaddingSize();
 	DrawVisitor.AtLocation = RootWidget->GetPadding().TopLeft;
 
-	DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DrawVisitor.AllowedSize.X, DrawVisitor.AllowedSize.Y, 128);
+	// DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DrawVisitor.AllowedSize.X, DrawVisitor.AllowedSize.Y, 128);
 
 	RootWidget->CalcDesiredSize(DrawVisitor.AllowedSize);
 	RootWidget->Draw(DrawVisitor);
@@ -83,21 +83,11 @@ void CUiViewport::Draw(bool bUpdate)
 	{
 		const SRect& DirtyRect(It->second);
 		BigZone.ExtendTo(DirtyRect);
-		//std::cout << "Dirty " << DirtyRect.TopLeft.X << " " << DirtyRect.TopLeft.Y << " " << DirtyRect.BottomRight.X - DirtyRect.TopLeft.X << " " << DirtyRect.BottomRight.Y - DirtyRect.TopLeft.Y << std::endl;
-		//PartialUpdate(DirtyRect.TopLeft.X, DirtyRect.TopLeft.Y, DirtyRect.BottomRight.X - DirtyRect.TopLeft.X, DirtyRect.BottomRight.Y - DirtyRect.TopLeft.Y);
 	}
-
-	//need to update last visible zones not in actual (visible zone removed)
 	for (std::map<CUiWidget*, SRect>::const_iterator It = LastVisibleZones.begin(); It != LastVisibleZones.end(); ++It)
 	{
-		std::map<CUiWidget*, SRect>::iterator ItFound = DrawVisitor.VisibleZones.find(It->first);
-		if (ItFound == DrawVisitor.VisibleZones.end() || ItFound->second != It->second)
-		{
-			const SRect& DirtyRect(It->second);
-			BigZone.ExtendTo(DirtyRect);
-			//std::cout << "Remove " << DirtyRect.TopLeft.X << " " << DirtyRect.TopLeft.Y << " " << DirtyRect.BottomRight.X - DirtyRect.TopLeft.X << " " << DirtyRect.BottomRight.Y - DirtyRect.TopLeft.Y << std::endl;
-			//PartialUpdate(DirtyRect.TopLeft.X, DirtyRect.TopLeft.Y, DirtyRect.BottomRight.X - DirtyRect.TopLeft.X, DirtyRect.BottomRight.Y - DirtyRect.TopLeft.Y);
-		}
+		const SRect& DirtyRect(It->second);
+		BigZone.ExtendTo(DirtyRect);
 	}
 
 	if (!BigZone.bIsValid)
@@ -131,10 +121,17 @@ CUiWidget* CUiViewport::GetWidgetUnder(const SVector2i Coord) const
 
 void CUiViewport::PartialUpdateForWidget(CUiWidget* Widget)
 {
+	SRect ZoneToUpdate;
 	std::map<CUiWidget*, SRect>::iterator It = DrawVisitor.VisibleZones.find(Widget);
 	if (It != DrawVisitor.VisibleZones.end())
 	{
-		SRect UpdateRect = It->second;
-		PartialUpdate(UpdateRect.TopLeft.X, UpdateRect.TopLeft.Y, UpdateRect.BottomRight.X - UpdateRect.TopLeft.X, UpdateRect.BottomRight.Y - UpdateRect.TopLeft.Y);
+		ZoneToUpdate.ExtendTo(It->second);
 	}
+	Draw(false);
+	It = DrawVisitor.VisibleZones.find(Widget);
+	if (It != DrawVisitor.VisibleZones.end())
+	{
+		ZoneToUpdate.ExtendTo(It->second);
+	}
+	PartialUpdate(ZoneToUpdate.TopLeft.X, ZoneToUpdate.TopLeft.Y, ZoneToUpdate.BottomRight.X - ZoneToUpdate.TopLeft.X, ZoneToUpdate.BottomRight.Y - ZoneToUpdate.TopLeft.Y);
 }

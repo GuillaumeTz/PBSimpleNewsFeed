@@ -25,7 +25,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 CDownloadManager* CDownloadManager::DownloadManager = NULL;
 
-CDownload::CDownload(const std::string& InUrl, const std::string& InOutFilePath, std::tr1::function<void (const CDownload&)> InOnFinished, int InTimeout /*= 10000*/)
+CDownload::CDownload(const std::string& InUrl, const std::string& InOutFilePath, std::tr1::function<void (const CDownload&)> InOnFinished, int InTimeout /*= 5000*/)
 {
 	Url = InUrl;
 	OutFilePath = InOutFilePath;
@@ -40,12 +40,12 @@ CDownload::CDownload(const std::string& InUrl, const std::string& InOutFilePath,
 	HostName = CApp::GetHostName(InUrl);
 }
 
-CDownload::CDownload(const std::string& InUrl, const std::string& InOutFilePath, int InTimeout /*= 10000*/)
+CDownload::CDownload(const std::string& InUrl, const std::string& InOutFilePath, int InTimeout /*= 5000*/)
 {	
 	Url = InUrl;
 	OutFilePath = InOutFilePath;
 	Timeout = InTimeout;
-	NbRemainingTries = 2;
+	NbRemainingTries = 1;
 
 	bHasSucceded = false;
 	bLaunched = false;
@@ -89,8 +89,8 @@ void* CDownload::DownloadThread(void* Data)
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &Download->Buffer);
-		curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 60000);
-		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 10000);
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, Download->Timeout);
+		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, Download->Timeout);
 		//if (post)
 		//{
 		//    curl_easy_setopt(curl, CURLOPT_POST,1);
@@ -131,6 +131,7 @@ void CDownload::Launch()
 
 	DownloadWriter = new CDownloadWriter();
 	DownloadWriter->Url = Url;
+	DownloadWriter->Timeout = Timeout;
 
 	if (pthread_create(&Thread, NULL, &CDownload::DownloadThread, (void*)*DownloadWriter) != 0)
 	{
@@ -189,7 +190,7 @@ bool CDownloadGroup::IsFinished() const
 	return true;
 }
 
-CDownloadManager::CDownloadManager() : MaxParallelDownloads(16), MaxParallelDownloadByHostname(5), NumDownloadRemaining(0)
+CDownloadManager::CDownloadManager() : MaxParallelDownloads(16), MaxParallelDownloadByHostname(2), NumDownloadRemaining(0)
 {
 
 }
@@ -398,17 +399,19 @@ void CDownloadManager::TickHandler()
 	if (!CDownloadManager::Get()->Check())
 	{
 		SetAutoPowerOff(1);
-		// iv_sleepmode(1);
+		iv_sleepmode(1);
 
 		CDownloadManager::Get()->NumDownloadRemaining = 0;
 		ClearTimer(&CDownloadManager::TickHandler);
 	}
 	else
 	{
-		//Need to do this on reader
+		SetAutoPowerOff(1);
+		iv_sleepmode(1);
 		SetAutoPowerOff(0);
-		// iv_sleepmode(0);
+		iv_sleepmode(0);
 
+		ClearTimer(&CDownloadManager::TickHandler);
 		SetHardTimer("DownloadManager", &CDownloadManager::TickHandler, 500);
 	}
 }

@@ -31,10 +31,14 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 #include <sys/stat.h>
 #include <sstream>
 
+#include <sys/types.h>
+#include <dirent.h>
+
 CApp::CApp()
 {
 	WidgetPushDown = NULL;
 	bSyncAllInProgress = false;
+	RemainingDownloadNumberUntilUpdate = 50;
 
 	MainPage = new CUiMainPage();
 	SettingsPage = new CUiSettingsPage();
@@ -198,13 +202,13 @@ int CApp::App_Handler(int type, int par1, int par2)
 	if (type == EVT_EXIT)
 	{
 		std::cerr << " EXIT";
-		CApp::Get()->Save();
+		CApp::Get()->Save(true);
 	}
 
 	if (type == EVT_BACKGROUND)
 	{
 		std::cerr << " BACKGROUND";
-		CApp::Get()->Save();
+		CApp::Get()->Save(true);
 	}
 
 	if (type == EVT_SHOW || type == EVT_REPAINT) 
@@ -385,7 +389,6 @@ void CApp::Sync(std::vector<int> FeedPath)
 
 	MainPage->bSyncing = true;
 	MainPage->RefreshDownloadCounter();
-	Draw(false);
 	Viewport.PartialUpdateForWidget(MainPage->DownloadCounterText);
 }
 
@@ -439,14 +442,29 @@ void CApp::DLReaderMode(std::vector<int> FeedPath)
 		{
 			const CNewsEntry& NewsEntry(Children[Index]->Entries[EntryIndex]);
 
-			std::string Link = NewsEntry.Link;
-			if (Link.empty())
-				continue;
+			if (!NewsEntry.Link.empty())
+			{
+				CDownload Download = GetReaderModeDownloadFor(NewsEntry.Link, Children[Index]);
+				if (!CApp::IsFileValid(Download.GetFilePath().c_str()))
+				{
+					Download.OnStarted = std::tr1::bind(&CApp::OnDownloadStarted, this);
+					Download.OnFinished = std::tr1::bind(&CApp::OnDownloadFinished, this);
+					DownloadGroup.Downloads.push_back(Download);
+				}
+			}
 
-			CDownload Download = GetReaderModeDownloadFor(Link, Children[Index]);
-			Download.OnStarted = std::tr1::bind(&CApp::OnDownloadStarted, this);
-			Download.OnFinished = std::tr1::bind(&CApp::OnDownloadFinished, this);
-			DownloadGroup.Downloads.push_back(Download);
+			if (!NewsEntry.ExternalLink.empty())
+			{
+				CDownload Download = GetReaderModeDownloadFor(NewsEntry.ExternalLink, Children[Index]);
+				//don't redownload same file
+				if (!CApp::IsFileValid(Download.GetFilePath().c_str()))
+				{
+					CDownload Download = GetReaderModeDownloadFor(NewsEntry.ExternalLink, Children[Index]);
+					Download.OnStarted = std::tr1::bind(&CApp::OnDownloadStarted, this);
+					Download.OnFinished = std::tr1::bind(&CApp::OnDownloadFinished, this);
+					DownloadGroup.Downloads.push_back(Download);
+				}
+			}
 		}
 	}
 	DownloadGroup.OnGroupFinished = std::tr1::bind(&CApp::OnDLReaderModeFinished, this);
@@ -550,11 +568,11 @@ void CApp::OnDownloadFinished()
 {
 	MainPage->RefreshDownloadCounter();
 
-	if ((CDownloadManager::Get()->NumDownloadRemaining % 50) == 0)
+	--RemainingDownloadNumberUntilUpdate;
+	if (RemainingDownloadNumberUntilUpdate <= 0 || CDownloadManager::Get()->NumDownloadRemaining == 0)
 	{
-		Draw(false);
+		RemainingDownloadNumberUntilUpdate = 50;
 		Viewport.PartialUpdateForWidget(MainPage->DownloadCounterText);
-		Save();
 	}
 }
 
@@ -565,6 +583,8 @@ void CApp::OnSyncFinished(std::vector<int> FeedPath)
 		return;
 
 	CurrentFeed->LoadDocument(true);
+
+	Save(true);
 
 	if (!History.empty())
 	{
@@ -590,7 +610,6 @@ void CApp::OnSyncFinished(std::vector<int> FeedPath)
 	CDownloadManager::Get()->AddDownloadGroup(DownloadGroup, false);
 
 	MainPage->RefreshDownloadCounter();
-	Draw(false);
 	Viewport.PartialUpdateForWidget(MainPage->DownloadCounterText);
 }
 
@@ -606,7 +625,6 @@ void CApp::Draw(bool bUpdate)
 
 void CApp::RedrawWidget(CUiWidget* Widget)
 {
-	Draw(false);
 	Viewport.PartialUpdateForWidget(Widget);
 }
 
@@ -614,7 +632,7 @@ void CApp::OpenMainPage()
 {
 	std::cerr << "OpenMainPage" << std::endl;
 
-	Save();
+	Save(false);
 
 	Viewport.RemoveAllOverlayWidgets();
 	Viewport.AddOverlayWidget(*MainPage);
@@ -785,7 +803,7 @@ void CApp::GoBack()
 	CNewsFeed* CurrentFeed = GetFeed(History.top().FeedPath);
 	if (CurrentFeed && !CurrentFeed->bIsFolder)
 	{
-		CurrentFeed->SaveDocument();
+		CurrentFeed->SaveDocument(true);
 	}
 
 	History.pop();
@@ -814,17 +832,49 @@ void CApp::QuitApplication()
 	CloseApp();
 }
 
-void CApp::Save()
+void CApp::Save(bool bSaveAll)
 {
-	std::cerr << "Save local OPML " << AppSettings.PathToSavedOPML << std::endl;
-	FeedList.SaveDocument(AppSettings.PathToSavedOPML);
-	std::cerr << "End save local OPML" << std::endl;
+	FeedList.SaveDocument(AppSettings.PathToSavedOPML, bSaveAll);
 }
 
 void CApp::ClearCache()
 {
+	FeedList.ClearCache();
+
+	std::vector<std::string> DirsToDo;
+	DirsToDo.push_back(CACHE_FOLDER);
+
+	std::vector<std::string> AllFiles;
+
+	for (int DirIndex = 0; DirIndex < DirsToDo.size(); ++DirIndex)
+	{
+		DIR* Dir = iv_opendir(DirsToDo[DirIndex].c_str());
+		if (!Dir)
+			continue;
+
+		dirent* DirEnt = nullptr;
+		while ((DirEnt = iv_readdir(Dir)) != NULL)
+		{
+			if (DirEnt->d_type == DT_DIR)
+			{
+				if (strcmp(DirEnt->d_name, ".") && strcmp(DirEnt->d_name, ".."))
+					DirsToDo.push_back(DirsToDo[DirIndex] + "/" + DirEnt->d_name);
+			}
+			else if (DirEnt->d_type == DT_REG || DirEnt->d_type == DT_LNK)
+			{
+				iv_unlink((DirsToDo[DirIndex] + "/" + DirEnt->d_name).c_str());
+			}
+		}
+		iv_closedir(Dir);
+	}
+
+	for (int DirIndex = DirsToDo.size() - 1; DirIndex >= 0; --DirIndex)
+	{
+		iv_rmdir(DirsToDo[DirIndex].c_str());
+	}
+
 	iv_rmdir(CACHE_FOLDER);
-	// pbLaunchWaitBinary("./rm", "--recursive --one-file-system --force ", CACHE_FOLDER);
+	iv_buildpath(CACHE_FOLDER);
 }
 
 CNewsFeed* CApp::GetFeed(const std::vector<int>& FeedPath)
@@ -916,7 +966,6 @@ void CApp::OnTouchDown(const SVector2i& Coord)
 	if (WidgetPushDown)
 	{
 		WidgetPushDown->SetIsPushed(true);
-		Draw(false);
 		Viewport.PartialUpdateForWidget(WidgetPushDown);
 	}
 }

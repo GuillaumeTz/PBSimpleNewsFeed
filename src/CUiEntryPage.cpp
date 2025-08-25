@@ -62,11 +62,7 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 
 		CUiText* UiText = CUiTextAllocator::New();
 		UiText->Font = App->AppSettings.EntryTitleFontBold;
-		UiText->Text = NewsEntry.Title;
-
-		//CUiButton* ButtonOpenExternalLink = new CUiButton();
-		//ButtonOpenExternalLink->Child = UiText;
-		//ButtonOpenExternalLink->OnPushFunction = std::tr1::bind(&CUiEntryPage::OnOpenExternalLink, this);
+		UiText->Text = NewsEntry.Title;  
 		TitleHorizontalBox->AddChild(UiText);
 	}
 
@@ -96,11 +92,11 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 			UiText->Font = App->AppSettings.EntryTextFontBold;
 			UiText->Text = "Open ReaderMode";
 
-			CUiButton* ButtonOpenExternalLink = new CUiButton();
-			ButtonOpenExternalLink->Child = UiText;
-			ButtonOpenExternalLink->OnPushFunction = std::tr1::bind(&CUiEntryPage::OnOpenInReaderMode, this);
-			ButtonOpenExternalLink->PivotPointRatio.X = 1.f;
-			HorizontalBox->AddChild(ButtonOpenExternalLink);
+			CUiButton* ButtonOpenReaderMode = new CUiButton();
+			ButtonOpenReaderMode->Child = UiText;
+			ButtonOpenReaderMode->OnPushFunction = std::tr1::bind(&CUiEntryPage::OnOpenInReaderMode, this);
+			ButtonOpenReaderMode->PivotPointRatio.X = 1.f;
+			HorizontalBox->AddChild(ButtonOpenReaderMode);
 		}
 		
 		if (bIsReddit)
@@ -175,26 +171,16 @@ void CUiEntryPage::SetEntry(const std::vector<int>& FeedPath, int EntryIndex)
 
 		if (bReaderModeFileDLed)
 		{
-			CUiReaderModeBrowser* ReaderModeBrowser = new CUiReaderModeBrowser();
-			ReaderModeBrowser->ShowUrl(NewsEntry.Link, 0, false, CurrentFeed);
-			AddChild(ReaderModeBrowser);
+			CUiText * UiText = CUiTextAllocator::New();
+			UiText->Font = App->AppSettings.EntryTextFontBold;
+			UiText->Text = "Open link in reader mode";
+
+			CUiButton* ButtonOpenReaderMode = new CUiButton();
+			ButtonOpenReaderMode->Child = UiText;
+			ButtonOpenReaderMode->OnPushFunction = std::tr1::bind(&CUiEntryPage::OnOpenInReaderMode, this);
+			AddChild(ButtonOpenReaderMode);
 		}
 	}
-
-	// PageNumText->Text = CUtils::ToString(GetPageIndex() + 1) + "/" + CUtils::ToString(GetMaxPageIndex());
-}
-
-void CUiEntryPage::CalcDesiredSize(SVector2i AllowedSize)
-{
-	CUiVerticalBox::CalcDesiredSize(AllowedSize);
-
-	// PageNumText->Text = CUtils::ToString(GetPageIndex() + 1) + "/" + CUtils::ToString(GetMaxPageIndex());
-}
-
-void CUiEntryPage::OnOpenExternalLink()
-{
-	CApp* App = CApp::Get();
-	App->OpenExternalLink(CurrentFeedPath, CurrentEntryIndex);
 }
 
 void CUiEntryPage::OnOpenInReaderMode()

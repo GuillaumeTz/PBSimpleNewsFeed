@@ -39,6 +39,7 @@ class CUiReaderModeBrowser : public CUiVerticalBox
 public:
 	std::string Title;
 	bool bIsDownloading;
+	bool bEnabled;
 
 public:
 	CUiReaderModeBrowser();

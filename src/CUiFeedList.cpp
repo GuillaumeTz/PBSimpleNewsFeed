@@ -57,6 +57,10 @@ void CUiFeedList::Refresh(const std::vector<int>& InPath)
 	ClearChildren();
 
 	CNewsFeed* CurrentFeed = App->GetFeed(CurrentPath);
+	if (!CurrentFeed->IsLoaded())
+	{
+		CurrentFeed->LoadDocument();
+	}
 
 	std::set<SFeedInfo> SortedFeeds;
 	if (CurrentFeed->bDisplayLastEntryFirst)

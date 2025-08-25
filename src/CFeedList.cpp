@@ -94,9 +94,9 @@ void CFeedList::ParseOutlineElement(tinyxml2::XMLElement* OutlineElement, CNewsF
 	// std::cout << std::endl;
 }
 
-void CFeedList::SaveDocument(const std::string& InPath)
+void CFeedList::SaveDocument(const std::string& InPath, bool bSaveAll)
 {
-	RootFeed.SaveDocument();
+	RootFeed.SaveDocument(bSaveAll);
 
 	if (XmlDoc)
 	{
@@ -117,6 +117,11 @@ const CNewsFeed* CFeedList::FindFeedByUniqueId(const std::string& InUniqueId, bo
 		return &RootFeed;
 
 	return RootFeed.FindFeedByUniqueId(InUniqueId, bRecursive);
+}
+
+void CFeedList::ClearCache()
+{
+	RootFeed.ClearCache();
 }
 
 std::vector<CDownload> CFeedList::Sync()

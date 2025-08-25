@@ -209,11 +209,13 @@ void CNewsFeed::LoadDocument(bool bForce)
 	std::string LocalFilePath = GetLocalFilePath("");
 	std::string FilePathDL = GetLocalFilePath("_dl");
 
+	bool bDirty = false;
 	//if there is no main file then just load the dl
 	if (!CApp::IsFileValid(LocalFilePath.c_str()))
 	{
 		LoadDocument(FilePathDL);
 		iv_unlink(FilePathDL.c_str());
+		bDirty = true;
 	}
 	else
 	{
@@ -246,6 +248,7 @@ void CNewsFeed::LoadDocument(bool bForce)
 					continue;
 
 				Entries.insert(Entries.begin(), Entry);
+				bDirty = true;
 				std::cout << "New entry " << Entry.Title << " ! " << std::endl;
 			}
 
@@ -267,6 +270,7 @@ void CNewsFeed::LoadDocument(bool bForce)
 					}
 				}
 				Entries.resize(App->AppSettings.MaxEntryToKeepByFeed);
+				bDirty = true;
 			}
 		}
 	}
@@ -284,7 +288,9 @@ void CNewsFeed::LoadDocument(bool bForce)
 
 	NbUnRead = GetNbUnRead();
 	NbNew = GetNbNew();
-	SaveDocument();
+
+	if (bDirty)
+		SaveDocument(true);
 }
 
 void CNewsFeed::LoadDocument(const std::string& InFilePath)
@@ -315,7 +321,7 @@ void CNewsFeed::LoadDocument(const std::string& InFilePath)
 	}
 }
 
-void CNewsFeed::SaveDocument()
+void CNewsFeed::SaveDocument(bool bSaveAll)
 {
 	if (XmlElement)
 	{
@@ -325,6 +331,9 @@ void CNewsFeed::SaveDocument()
 		XmlElement->SetAttribute("bDisplayLastEntryFirst", bDisplayLastEntryFirst);
 		XmlElement->SetAttribute("UniqueId", UniqueId.c_str());
 		XmlElement->SetAttribute("bDeleted", bDeleted);
+
+		XmlElement->SetAttribute("RM_bShowOnlyTextualRelevantTags", ReaderModeSettings.bShowOnlyTextualRelevantTags);
+		XmlElement->SetAttribute("RM_bHideElementsBeforeFirstPhrase", ReaderModeSettings.bHideElementsBeforeFirstPhrase);
 	}
 
 	if (bDeleted)
@@ -334,10 +343,10 @@ void CNewsFeed::SaveDocument()
 	{
 		for (int Index = 0; Index < NewsFeeds.size(); ++Index)
 		{
-			NewsFeeds[Index].SaveDocument();
+			NewsFeeds[Index].SaveDocument(bSaveAll);
 		}
 	}
-	else if (!Entries.empty())
+	else if (!Entries.empty() && bSaveAll)
 	{
 		if (!bIsLoaded)
 			return;
@@ -388,6 +397,8 @@ void CNewsFeed::TransferFromOldFeed(const CNewsFeed& OldFeed)
 	NbUnRead = OldFeed.NbUnRead;
 	NbNew = OldFeed.NbNew;
 
+	ReaderModeSettings = OldFeed.ReaderModeSettings;
+
 	for (CNewsEntry& Entry : Entries)
 	{
 		const CNewsEntry* OldEntry = OldFeed.FindEntryByUniqueId(Entry.UniqueId);
@@ -420,7 +431,7 @@ std::vector<CDownload> CNewsFeed::Sync()
 		{
 			CApp::ReplaceAll(FixedUrl, "/.rss", "/new/.rss?limit=50");
 		}
-		Downloads.push_back(CDownload(FixedUrl, GetLocalFilePath("_dl"), 5000));
+		Downloads.push_back(CDownload(FixedUrl, GetLocalFilePath("_dl")));
 	}
 	return Downloads;
 }
@@ -439,30 +450,16 @@ std::vector<CDownload> CNewsFeed::AdditionalSync()
 	}
 	else
 	{
-		std::cout << "Newsfeed additional sync :" << this->Url << std::endl;
 		for (int Index = 0; Index < Entries.size(); ++Index)
 		{
 			const CNewsEntry& NewsEntry = Entries[Index];
-			size_t ReadMoreLinkPos = NewsEntry.Text.rfind(">Read More");
-			if ((NewsEntry.Link.find("www.reddit.com") != std::string::npos)
-			|| (NewsEntry.Text.rfind("[...]") != std::string::npos)
-			|| (NewsEntry.Link.find("twitter.com") == std::string::npos && NewsEntry.Text.size() < 512)
-			|| (ReadMoreLinkPos != std::string::npos && ReadMoreLinkPos > NewsEntry.Text.size() - size_t(std::max(NewsEntry.Text.size() * 0.75f, 20.f))))
+			if ((NewsEntry.Link.find("www.reddit.com") != std::string::npos))
 			{
 				CDownload Download = CApp::GetReaderModeDownloadFor(NewsEntry.Link, this);
 				//dont redownload same file
 				if (!CApp::IsFileValid(Download.GetFilePath().c_str()))
 				{
-					Downloads.push_back(Download);
-				}
-			}
-
-			if (!NewsEntry.ExternalLink.empty())
-			{
-				CDownload Download = CApp::GetReaderModeDownloadFor(NewsEntry.ExternalLink, this);
-				//dont redownload same file
-				if (!CApp::IsFileValid(Download.GetFilePath().c_str()))
-				{
+					std::cout << "Newsfeed additional sync :" << this->Url << std::endl;
 					Downloads.push_back(Download);
 				}
 			}
@@ -625,6 +622,20 @@ void CNewsFeed::ParseOutlineElementFromOpml(tinyxml2::XMLElement* Element)
 	bDisplayLastEntryFirst = (Element->GetAttribute("bDisplayLastEntryFirst", 1) != 0);
 	NbUnRead = Element->GetAttribute("NbUnRead", 0);
 	NbNew = Element->GetAttribute("NbNew", 0);
+	ReaderModeSettings.bShowOnlyTextualRelevantTags = Element->GetAttribute("RM_bShowOnlyTextualRelevantTags", ReaderModeSettings.bShowOnlyTextualRelevantTags);
+	ReaderModeSettings.bHideElementsBeforeFirstPhrase = Element->GetAttribute("RM_bHideElementsBeforeFirstPhrase", ReaderModeSettings.bHideElementsBeforeFirstPhrase);
+}
+
+void CNewsFeed::ClearCache()
+{
+	bIsLoaded = false;
+	NbUnRead = 0;
+	NbNew = 0;
+	Entries.clear();
+	for (CNewsFeed& Feed : NewsFeeds)
+	{
+		Feed.ClearCache();
+	}
 }
 
 void CNewsFeed::ReadRss(tinyxml2::XMLDocument* XmlDoc)

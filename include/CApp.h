@@ -104,7 +104,7 @@ public:
 
 	void GoBack();
 	void QuitApplication();
-	void Save();
+	void Save(bool bSaveAll);
 	void ClearCache();
 
 	CNewsFeed* GetFeed(const std::vector<int>& FeedPath);
@@ -137,6 +137,7 @@ private:
 	std::vector<TSharedPtr<CUiWidget>> WidgetFocusPath;
 	std::time_t WidgetPushDownTime;
 
+	int RemainingDownloadNumberUntilUpdate;
 	bool bSyncAllInProgress;
 };
 

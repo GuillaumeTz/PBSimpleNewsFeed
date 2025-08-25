@@ -33,13 +33,14 @@ class CDownloadWriter : public CReferenced
 public:
 	std::string Url;
 	std::stringstream Buffer;
+	int Timeout;
 };
 
 class CDownload
 {
 public:
-	CDownload(const std::string& InUrl, const std::string& InOutFilePath, int InTimeout = 10000);
-	CDownload(const std::string& InUrl, const std::string& InOutFilePath, std::tr1::function<void (const CDownload&)> InOnFinished, int InTimeout = 10000);
+	CDownload(const std::string& InUrl, const std::string& InOutFilePath, int InTimeout = 5000);
+	CDownload(const std::string& InUrl, const std::string& InOutFilePath, std::tr1::function<void (const CDownload&)> InOnFinished, int InTimeout = 5000);
 	virtual ~CDownload();
 
 	static void* DownloadThread(void* DownloadPtr);

@@ -199,6 +199,8 @@ void CUiSettingsPage::OnMaxEntryToKeepChanged(CUiText* Text)
 	LocalAppSettings.MaxEntryToKeepByFeed = atoi(Text->Text.c_str());
 	LocalAppSettings.MaxEntryToKeepByFeed = LocalAppSettings.MaxEntryToKeepByFeed < 1 ? 1 : LocalAppSettings.MaxEntryToKeepByFeed;
 	Text->Text = CUtils::ToString(LocalAppSettings.MaxEntryToKeepByFeed);
+	CApp* App = CApp::Get();
+	App->Draw();
 }
 
 void CUiSettingsPage::OnResolutionWidthChanged(CUiText* Text)
@@ -206,6 +208,8 @@ void CUiSettingsPage::OnResolutionWidthChanged(CUiText* Text)
 	LocalAppSettings.ResolutionWidth = std::max(480, atoi(Text->Text.c_str()));
 	LocalAppSettings.ResolutionWidth = std::min(LocalAppSettings.ResolutionWidth, ScreenWidth());
 	Text->Text = CUtils::ToString(LocalAppSettings.ResolutionWidth);
+	CApp* App = CApp::Get();
+	App->Draw();
 }
 
 void CUiSettingsPage::OnResolutionHeightChanged(CUiText* Text)
@@ -213,11 +217,15 @@ void CUiSettingsPage::OnResolutionHeightChanged(CUiText* Text)
 	LocalAppSettings.ResolutionHeight = std::max(640, atoi(Text->Text.c_str()));
 	LocalAppSettings.ResolutionHeight = std::min(LocalAppSettings.ResolutionHeight, ScreenHeight());
 	Text->Text = CUtils::ToString(LocalAppSettings.ResolutionHeight);
+	CApp* App = CApp::Get();
+	App->Draw();
 }
 
 void CUiSettingsPage::OnOpmlFilePathChanged(CUiText* Text)
 {
 	LocalAppSettings.PathToOPML = Text->Text;
+	CApp* App = CApp::Get();
+	App->Draw();
 }
 
 void CUiSettingsPage::Save()
@@ -238,4 +246,5 @@ void CUiSettingsPage::ClearCache()
 {
 	CApp* App = CApp::Get();
 	App->ClearCache();
+	App->Draw();
 }

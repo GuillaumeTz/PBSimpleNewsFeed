@@ -30,10 +30,7 @@ public:
 
 	void SetEntry(const std::vector<int>& FeedPath, int EntryIndex);
 
-	virtual void CalcDesiredSize(SVector2i AllowedSize) override;
-
 private:
-	void OnOpenExternalLink();
 	void OnOpenInReaderMode();
 	void RefreshReaderMode();
 	void RefreshEnded();

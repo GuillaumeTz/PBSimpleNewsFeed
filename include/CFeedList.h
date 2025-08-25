@@ -42,8 +42,9 @@ public:
 	void LoadFeeds(bool bForce);
 	void LoadDocument(const std::string& InPath);
 	void ParseOutlineElement(tinyxml2::XMLElement* OutlineElement, CNewsFeed* Parent, unsigned int Index);
-	void SaveDocument(const std::string& InPath);
+	void SaveDocument(const std::string& InPath, bool bSaveAll);
 	const CNewsFeed* FindFeedByUniqueId(const std::string& InUniqueId, bool bRecursive = true) const;
+	void ClearCache();
 
 	std::vector<CDownload> Sync();
 };
