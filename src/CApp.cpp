@@ -220,20 +220,11 @@ int CApp::App_Handler(int type, int par1, int par2)
 
 	if (type == EVT_KEYPRESS)
 	{
-		//std::stringstream stream;
-		//stream << "Keypress " << par1 << " " << par2;
-		//CApp::Get()->msg(stream.str().c_str());
-		if (par1 == 20 || par1 == 25)
+		switch (par1)
 		{
-			CApp::Get()->NextPage();
-		}
-		else if (par1 == 19 || par1 == 24)
-		{
-			CApp::Get()->PreviousPage();
-		}
-		else
-		{
-			//CApp::Get()->QuitApplication();
+		case 20: case 25: CApp::Get()->NextPage(); break;
+		case 19: case 24: CApp::Get()->PreviousPage(); break;
+		case 17: case 23: CApp::Get()->GoBack(); break;
 		}
 	}
 
@@ -794,6 +785,15 @@ void CApp::ShowLastEntries()
 
 void CApp::GoBack()
 {
+	if (CUiReaderModeBrowser* ReaderMode = dynamic_cast<CUiReaderModeBrowser*>(MainPage->GetMainElement()))
+	{
+		if (ReaderMode->CanGoBack())
+		{
+			ReaderMode->GoBack();
+			return;
+		}
+	}
+
 	if (History.empty())
 	{
 		OpenMainPage();
@@ -981,11 +981,12 @@ void CApp::OnTouchLong(const SVector2i& Coord)
 			CUiContextMenu* ContextMenu = new CUiContextMenu();
 			ContextMenu->ContextMenuOptions = ContextMenuOptions;
 			ContextMenu->bDirty = true;
-			ContextMenu->SetPadding(Coord.X, Coord.Y, 0, 0);
+			ContextMenu->SetFixedPosition(Coord);
 			Viewport.AddOverlayWidget(ContextMenu);
 			SetFocusOn(ContextMenu);
-			Draw(true);
+			RedrawWidget(ContextMenu);
 			WidgetPushDown->SetIsPushed(false);
+			RedrawWidget(WidgetPushDown);
 		}
 		else
 		{

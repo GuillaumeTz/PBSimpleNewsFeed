@@ -60,6 +60,15 @@ public:
 	int OffsetBottom;
 	float CoeffWidth;
 	bool bSynchronizeAtStart;
+	bool bHideFooterNavigation;
+
+	void SetScale(float InNewScale);
+	float GetScale() const { return Scale; }
+
+	void Reset();
+
+private:
+	float Scale;
 
 public:
 	void LoadConfig();

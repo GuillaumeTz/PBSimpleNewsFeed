@@ -28,20 +28,12 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 #include "ui/CMath.h"
 
 class CUiWidget;
-
-class CInkViewInterface
-{
-public:
-	static float Scale;
-};
-
 class SUiDrawVisitor
 {
 public:
 	SUiDrawVisitor();
 
 	SVector2i AtLocation;
-	SRect ClipZone;
 	SVector2i AllowedSize;
 
 	int StartHeight;
@@ -93,8 +85,9 @@ public:
 	CUiWidget();
 	virtual ~CUiWidget();
 
-	void SetPadding(int Left, int Top, int Right, int Bottom) { Padding.TopLeft = SVector2i(Left, Top) * CInkViewInterface::Scale; Padding.BottomRight = SVector2i(Right, Bottom) * CInkViewInterface::Scale; }
-	void SetBottomPadding(int Bottom) { Padding.BottomRight.Y = Bottom * CInkViewInterface::Scale; }
+	void SetFixedPosition(const SVector2i& InPosition) { Padding.TopLeft = InPosition; Padding.BottomRight = SVector2i(0, 0); }
+	void SetPadding(int Left, int Top, int Right, int Bottom);
+	void SetBottomPadding(int Bottom);
 	const SRect& GetPadding() const { return Padding; }
 
 	SVector2i GetPaddingSize() const { return (GetPadding().TopLeft + GetPadding().BottomRight); }
@@ -163,6 +156,7 @@ public:
 	virtual void ClearChildren();
 
 	void AddChild(CUiWidget* Widget);
+	void ReplaceChildAt(int Index, CUiWidget* NewWidget);
 	void RemoveChild(const CUiWidget* Widget);
 	void RemoveChildAt(int Index);
 

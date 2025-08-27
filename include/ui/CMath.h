@@ -30,6 +30,7 @@ public:
 	TVector2D() : X(0), Y(0) {}
 	TVector2D(T InXY) : X(InXY), Y(InXY) {}
 	TVector2D(T InX, T InY) : X(InX), Y(InY) {}
+	template<class OtherT> TVector2D(const OtherT& OtherVec) : X(OtherVec.X), Y(OtherVec.Y) {}
 
 	TVector2D<T>& operator+=(const TVector2D<T>& rhs) { X += rhs.X; Y += rhs.Y;	return *this; }
 	TVector2D<T> operator+(const TVector2D<T>& rhs) const { TVector2D<T> Result = *this; Result += rhs; return Result; }
@@ -37,6 +38,7 @@ public:
 	TVector2D<T> operator-(const TVector2D<T>& rhs) const { TVector2D<T> Result = *this; Result -= rhs; return Result; }
 	TVector2D<T>& operator*=(const T& Scale) { X *= Scale; Y *= Scale; return *this; }
 	TVector2D<T> operator*(const T& Scale) const { TVector2D<T> Result = *this; Result.X *= Scale; Result.Y *= Scale; return Result; }
+	TVector2D<T> operator*(const TVector2D<T>& OtherVec) const { TVector2D<T> Result = *this; Result.X *= OtherVec.X; Result.Y *= OtherVec.Y; return Result; }
 	bool operator!=(const TVector2D<T>& rhs) const { return X != rhs.X || Y != rhs.Y; }
 
 	void Clamp(const TVector2D<T>& Min, const TVector2D<T>& Max)

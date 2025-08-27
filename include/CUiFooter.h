@@ -14,39 +14,19 @@ You should have received a copy of the GNU General Public License
 along with this program.If not, see < https://www.gnu.org/licenses/>.
 */
 
-#ifndef CUISETTINGSPAGE_H
-#define CUISETTINGSPAGE_H
+#ifndef CUIFOOTER_H
+#define CUIFOOTER_H
 
 #include "ui/CUiHorizontalBox.h"
-#include "CAppSettings.h"
 
 class CUiText;
-class CUiButton;
+class CUiVerticalBox;
 
-class CUiSettingsPage : public CUiHorizontalBox
+class CUiFooter : public CUiHorizontalBox
 {
 public:
-	CUiSettingsPage();
+	CUiFooter();
 
-	void Refresh();
-
-	void OnMaxEntryToKeepChanged(CUiText* Text);
-	void OnResolutionWidthChanged(CUiText* Text);
-	void OnResolutionHeightChanged(CUiText* Text);
-	void OnOpmlFilePathChanged(CUiText* Text);
-	void OnScaleChanged(CUiText* Text);
-	void OnToggleNavigationFooter();
-	void OnToggleSynchronizeAtStart();
-
-	void Save();
-	void Cancel();
-	void ClearCache();
-	void ResetConfig();
-
-private:
-	void InternalRefresh();
-
-	CAppSettings OriginalAppSettings;
 };
 
 #endif

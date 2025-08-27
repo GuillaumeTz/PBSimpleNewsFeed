@@ -37,6 +37,7 @@ CUiReaderModeBrowser::CUiReaderModeBrowser() : CUiVerticalBox()
 	Feed = NULL;
 	RefreshButton = NULL;
 	BackButton = NULL;
+	bFillWidth = true;
 
 	SubVerticalBox = new CUiVerticalBox();
 	SubVerticalBox->bSupportMultiplePages = true;
@@ -95,7 +96,7 @@ void CUiReaderModeBrowser::ShowUrl(const std::string& InUrl, int InPageIndex, bo
 				Text->Font = App->AppSettings.EntryTextFontBold;
 				Text->Text = "Back";
 				BackButton->Child = Text;
-				BackButton->OnPushFunction = std::tr1::bind(&CUiReaderModeBrowser::Back, this);
+				BackButton->OnPushFunction = std::tr1::bind(&CUiReaderModeBrowser::GoBack, this);
 				BackButton->Visibility = EUiWidgetVisibility::Hidden;
 				BackButton->SetPadding(0, 0, 20, 0);
 			}
@@ -173,7 +174,7 @@ void CUiReaderModeBrowser::Refresh()
 	}
 }
 
-void CUiReaderModeBrowser::Back()
+void CUiReaderModeBrowser::GoBack()
 {
 	if (bIsDownloading)
 		return;

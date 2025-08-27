@@ -49,6 +49,8 @@ void CUiOverlay::Draw(SUiDrawVisitor& DrawVisitor)
 		DrawVisitor.AtLocation = OriginalLocation + Widget->GetPadding().TopLeft;
 		DrawVisitor.AllowedSize = OriginalParentSize - Widget->GetPaddingSize();
 
+		DrawVisitor.AtLocation += Widget->PivotPointRatio * SVector2f(DrawVisitor.AllowedSize - Widget->DesiredSize);
+
 		Widget->Draw(DrawVisitor);
 	}
 

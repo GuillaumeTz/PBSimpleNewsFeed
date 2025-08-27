@@ -46,7 +46,8 @@ public:
 	void ShowUrl(const std::string& InUrl, int InPageIndex, bool bForceDownload = false, CNewsFeed* Feed = nullptr);
 
 	void Refresh();
-	void Back();
+	bool CanGoBack() const { return !HistoryUrls.empty(); }
+	void GoBack();
 
 	void OnDownloadFinished(bool bIsFromDownload);
 

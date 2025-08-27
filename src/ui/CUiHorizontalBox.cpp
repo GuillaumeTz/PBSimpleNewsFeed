@@ -25,62 +25,61 @@ CUiHorizontalBox::CUiHorizontalBox() : CUiCompositeWidget()
 
 void CUiHorizontalBox::CalcDesiredSize(SVector2i AllowedSize)
 {
-	CUiCompositeWidget::CalcDesiredSize(AllowedSize);
+	DesiredSize = SVector2i(0, 0);
 
-	int MaxY = 0;
 	for (int Index = 0; Index < (*GetChildren()).size(); ++Index)
 	{
+		SVector2i ChildAllowedSize = AllowedSize;
+		if (bFillWidth)
+			ChildAllowedSize.X = AllowedSize.X / GetChildren()->size();
+
 		CUiWidget* Widget = (*GetChildren())[Index].Get();
-		MaxY = std::max(MaxY, Widget->DesiredSize.Y + Widget->GetPaddingAlongY());
+		Widget->CalcDesiredSize(ChildAllowedSize);
+
 		DesiredSize.X += Widget->DesiredSize.X + Widget->GetPaddingAlongX();
+		DesiredSize.Y = std::max(DesiredSize.Y, Widget->DesiredSize.Y + Widget->GetPaddingAlongY());
 	}
-	DesiredSize.Y += MaxY;
+
+	if (bFillWidth)
+		DesiredSize.X = AllowedSize.X;
+	
+	if (bFillHeight)
+		DesiredSize.Y = AllowedSize.Y;
 }
 
 void CUiHorizontalBox::Draw(SUiDrawVisitor& DrawVisitor)
 {
 	const SVector2i OriginalParentSize = DrawVisitor.AllowedSize;
 	const SVector2i OriginalLocation = DrawVisitor.AtLocation;
-	
-	SVector2i ChildrenSize = DesiredSize;
-	float SpacingRatio = 1.f;
+
+	SVector2i ChildAllowedSize = DrawVisitor.AllowedSize;
 	if (bFillWidth)
 	{
-		SpacingRatio = float(DrawVisitor.AllowedSize.X) / float(ChildrenSize.X);
-	}
-
-	//if (DrawVisitor.AtLocation.X > 10)
-	{
-		//DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DesiredSize.X, DesiredSize.Y, 0);
-		//DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, OriginalParentSize.X, OriginalParentSize.Y, 0);
+		ChildAllowedSize.X = DrawVisitor.AllowedSize.X / GetChildren()->size();
 	}
 
 	for (int Index = 0; Index < (*GetChildren()).size(); ++Index)
 	{
 		CUiWidget* Widget = (*GetChildren())[Index].Get();
 
-		DrawVisitor.AllowedSize.X = (Widget->DesiredSize.X + Widget->GetPaddingAlongX()) * SpacingRatio - Widget->GetPaddingAlongX();
-		if (bFillHeight)
-		{
-			DrawVisitor.AllowedSize.Y = OriginalParentSize.Y - Widget->GetPaddingAlongY();
-		}
-		else
-		{
-			DrawVisitor.AllowedSize.Y = ChildrenSize.Y - Widget->GetPaddingAlongY();
-		}
+		DrawVisitor.AllowedSize = ChildAllowedSize;
 
-		DrawVisitor.AtLocation.X += Widget->GetPadding().TopLeft.X;
-		const SVector2i AtLocation = DrawVisitor.AtLocation;
+		const SVector2i OldAtLocation = DrawVisitor.AtLocation;
+
+		DrawVisitor.AtLocation += Widget->GetPadding().TopLeft;
+		DrawVisitor.AllowedSize -= Widget->GetPaddingSize();
+
 		DrawVisitor.AtLocation.X += Widget->PivotPointRatio.X * float(DrawVisitor.AllowedSize.X - Widget->DesiredSize.X);
-		DrawVisitor.AtLocation.Y += Widget->GetPadding().TopLeft.Y + Widget->PivotPointRatio.Y * float(DrawVisitor.AllowedSize.Y - Widget->DesiredSize.Y);
-		DrawVisitor.AllowedSize.X -= Widget->PivotPointRatio.X * float(DrawVisitor.AllowedSize.X - Widget->DesiredSize.X);
-		DrawVisitor.AllowedSize.Y -= Widget->PivotPointRatio.Y * float(DrawVisitor.AllowedSize.Y - Widget->DesiredSize.Y);
+		DrawVisitor.AtLocation.Y += Widget->PivotPointRatio.Y * float(DrawVisitor.AllowedSize.Y - Widget->DesiredSize.Y);
 
-		//DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DrawVisitor.ParentSize.X, DrawVisitor.ParentSize.Y, 0);
 		Widget->Draw(DrawVisitor);
 
-		DrawVisitor.AtLocation.X += DrawVisitor.AllowedSize.X + Widget->GetPadding().BottomRight.X;
-		DrawVisitor.AtLocation.Y = AtLocation.Y;
+		DrawVisitor.AtLocation.X += Widget->DesiredSize.X + Widget->GetPadding().BottomRight.X;
+		if (bFillWidth)
+		{
+			DrawVisitor.AtLocation.X = OldAtLocation.X + ChildAllowedSize.X;
+		}
+		DrawVisitor.AtLocation.Y = OldAtLocation.Y;
 	}
 
 	DrawVisitor.AtLocation = OriginalLocation;

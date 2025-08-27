@@ -35,8 +35,10 @@ void CUiContextMenu::ActivateOption( CUiButton* Button, SUiContextMenuOption Opt
 	{
 		Option.OnPushFunction();
 	}
-	CApp::Get()->Viewport.PopOverlayWidget(this);
-	CApp::Get()->Draw(true);
+
+	TSharedPtr<CUiContextMenu> StrongRefThis = this;
+	CApp::Get()->Viewport.PopOverlayWidget(*StrongRefThis);
+	CApp::Get()->Draw();
 }
 
 void CUiContextMenu::CalcDesiredSize(SVector2i AllowedSize)
@@ -45,6 +47,7 @@ void CUiContextMenu::CalcDesiredSize(SVector2i AllowedSize)
 	{
 		ClearChildren();
 		bool bFirst = true;
+		int MaxButtonWidth = 0;
 		for (const SUiContextMenuOption& Option : ContextMenuOptions)
 		{
 			if (!bFirst)
@@ -61,15 +64,19 @@ void CUiContextMenu::CalcDesiredSize(SVector2i AllowedSize)
 			TextWidget->Font = CApp::Get()->AppSettings.ContextMenuFont;
 
 			CUiButton* Button = new CUiButton();
-			Button->bFillWidth = true;
 			Button->Child = TextWidget;
 			Button->OnPushFunction = std::tr1::bind(&CUiContextMenu::ActivateOption, this, std::tr1::placeholders::_1, Option);
 			AddChild(Button);
+
+			Button->CalcDesiredSize(AllowedSize);
+			MaxButtonWidth = std::max(MaxButtonWidth, Button->DesiredSize.X + 20);
 		}
 		bDirty = false;
-	}
 
-	CUiVerticalBox::CalcDesiredSize(AllowedSize);
+		AllowedSize.X = MaxButtonWidth;
+
+		CUiVerticalBox::CalcDesiredSize(AllowedSize);
+	}
 }
 
 void CUiContextMenu::Draw(SUiDrawVisitor& DrawVisitor)
@@ -83,10 +90,14 @@ void CUiContextMenu::Draw(SUiDrawVisitor& DrawVisitor)
 	DrawVisitor.AllowedSize = DesiredSize;
 	CUiVerticalBox::Draw(DrawVisitor);
 	DrawVisitor.AllowedSize = OriginalParentSize;
+	DrawVisitor.AllowedSize = OriginalParentSize;
+
+	DrawVisitor.MarkHasDrawn(this, SRect(DrawVisitor.AtLocation - SVector2i(10, 10), DrawVisitor.AtLocation + DesiredSize + SVector2i(10, 10)));
 }
 
 void CUiContextMenu::OnLostFocusPath()
 {
-	CApp::Get()->Viewport.PopOverlayWidget(this);
-	CApp::Get()->Draw(true);
+	TSharedPtr<CUiContextMenu> StrongRefThis = this;
+	CApp::Get()->Viewport.PopOverlayWidget(*StrongRefThis);
+	CApp::Get()->Draw();
 }

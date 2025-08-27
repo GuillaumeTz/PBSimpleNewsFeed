@@ -17,6 +17,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 #include "CUiMainPage.h"
 #include "CUiFeedPage.h"
 #include "CUiFeedList.h"
+#include "CUiFooter.h"
 #include "CApp.h"
 
 #include "ui/CUiVerticalBox.h"
@@ -42,36 +43,41 @@ CUiMainPage::CUiMainPage() : CUiOverlay()
 
 void CUiMainPage::Refresh()
 {
-	std::cerr << "Main Page Refresh" << std::endl;
 	CApp* App = CApp::Get();
+
+	if (App->AppSettings.bHideFooterNavigation)
+	{
+		Footer = nullptr;
+	}
+	else
+	{
+		Footer = new CUiFooter();
+		Footer->CalcDesiredSize(SVector2i(ScreenWidth(), ScreenHeight()));
+		Footer->PivotPointRatio.Y = 1.f;
+	}
 
 	ClearChildren();
 	MainVerticalBox = new CUiVerticalBox();
 	MainVerticalBox->DebugName = "MainPageVBox";
+	MainVerticalBox->bFillWidth = true;
 	AddChild(MainVerticalBox);
-	MainVerticalBox->SetPadding(20, 0, 20, 0);
+	MainVerticalBox->SetPadding(20, 0, 20, (Footer ? Footer->DesiredSize.Y : 0) + 20);
 
 	// add header bar
 	{
-		{
-			CUiLine* Line = CUiLineAllocator::New();
-			Line->bVertical = false;
-			MainVerticalBox->AddChild(Line);
-		}
-
 		CUiHorizontalBox* HeaderBarHBox = new CUiHorizontalBox();
 		HeaderBarHBox->DebugName = "HeaderBarHBox";
-		HeaderBarHBox->bFillWidth = true;
+		HeaderBarHBox->bFillWidth = false;
 
 		{
-			CUiButton* HomeButton = new CUiButton();
+			CUiButton* QuitButton = new CUiButton();
 			CUiText* Text = CUiTextAllocator::New();
 			Text->Font = App->AppSettings.MenuButtonFont;
 			Text->Text = "X";
-			HomeButton->Child = Text;
-			HomeButton->OnPushFunction = std::tr1::bind(&CApp::QuitApplication, App);
-			HomeButton->SetPadding(10, 10, 10, 10);
-			HeaderBarHBox->AddChild(HomeButton);
+			QuitButton->Child = Text;
+			QuitButton->OnPushFunction = std::tr1::bind(&CApp::QuitApplication, App);
+			QuitButton->SetPadding(20, 10, 20, 10);
+			HeaderBarHBox->AddChild(QuitButton);
 		}
 
 		{
@@ -107,22 +113,18 @@ void CUiMainPage::Refresh()
 			HeaderBarHBox->AddChild(Button);
 		}
 
-		{
-			CUiButton* BackButton = new CUiButton();
-			CUiText* Text = CUiTextAllocator::New();
-			Text->Font = App->AppSettings.MenuButtonFont;
-			Text->Text = "<=";
-			BackButton->Child = Text;
-			BackButton->OnPushFunction = std::tr1::bind(&CApp::GoBack, App);
-			BackButton->SetPadding(10, 10, 10, 10);
-			HeaderBarHBox->AddChild(BackButton);
-		}
-
 		MainVerticalBox->AddChild(HeaderBarHBox);
 
 		{
 			CUiLine* Line = CUiLineAllocator::New();
 			Line->bVertical = false;
+			MainVerticalBox->AddChild(Line);
+		}
+
+		{
+			CUiLine* Line = CUiLineAllocator::New();
+			Line->bVertical = false;
+			Line->SetPadding(0, 2, 0, 0);
 			MainVerticalBox->AddChild(Line);
 		}
 	}
@@ -219,10 +221,15 @@ void CUiMainPage::Refresh()
 	}
 
 	IndexOfMainElement = MainVerticalBox->GetChildren()->size();
+	MainVerticalBox->AddChild(new CUiLine());
+
+	// add footer
+	if (Footer)
+	{
+		AddChild(Footer);
+	}
 
 	SetPath({});
-
-	std::cerr << "End Main Page Refresh" << std::endl;
 }
 
 void CUiMainPage::RefreshDownloadCounter()
@@ -253,8 +260,7 @@ void CUiMainPage::SetMainElement(CUiWidget* Widget)
 	if (!MainVerticalBox)
 		return;
 
-	MainVerticalBox->GetChildren()->resize(IndexOfMainElement);
-	MainVerticalBox->AddChild(Widget);
+	MainVerticalBox->ReplaceChildAt(IndexOfMainElement, Widget);
 }
 
 CUiWidget* CUiMainPage::GetMainElement()

@@ -41,6 +41,7 @@ public:
 protected:
 	CUiHorizontalBox* BreadcrumbHBox;
 	CUiVerticalBox* MainVerticalBox;
+	class CUiFooter* Footer;
 	int IndexOfMainElement;
 };
 

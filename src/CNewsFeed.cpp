@@ -125,7 +125,6 @@ void CNewsEntry::ParseElement(tinyxml2::XMLElement* InXmlElement)
 	ExternalLink = "";
 	if (Link.find("www.reddit.com") != std::string::npos && Text.find("<p>") == std::string::npos)
 	{
-		std::cerr << "Reddit external link " << std::endl;
 		//if reddit and no text this is an external link
 		size_t SpanPos = Text.find("<span>");
 		if (SpanPos != std::string::npos)
@@ -138,7 +137,6 @@ void CNewsEntry::ParseElement(tinyxml2::XMLElement* InXmlElement)
 				if (EndLinkPos != std::string::npos)
 				{
 					ExternalLink = Text.substr(HRefPos + 6, EndLinkPos - (HRefPos + 6));
-					std::cerr << ExternalLink << std::endl;
 				}
 			}
 		}
@@ -431,7 +429,8 @@ std::vector<CDownload> CNewsFeed::Sync()
 		{
 			CApp::ReplaceAll(FixedUrl, "/.rss", "/new/.rss?limit=50");
 		}
-		Downloads.push_back(CDownload(FixedUrl, GetLocalFilePath("_dl")));
+		CDownload Download(FixedUrl, GetLocalFilePath("_dl"));
+		Downloads.push_back(Download);
 	}
 	return Downloads;
 }

@@ -122,14 +122,12 @@ void CUiText::CalcDesiredSize(SVector2i AllowedSize)
 	CUiWidget::CalcDesiredSize(AllowedSize);
 
 	MaxWidth = AllowedSize.X;
-	if (Font.IsValid())
-	{
-		SetFont(Font.Font, BLACK);
-	}
+	CUiFont* UsedFont = Font.IsValid() ? &Font : &CApp::Get()->AppSettings.DefaultFont;
+	SetFont(UsedFont->Font, BLACK);
 
 	CuttingTextIndexes.clear();
 
-	DesiredSize.Y += Font.IsValid() ? Font.Font->size : 30;
+	DesiredSize.Y += UsedFont->Font->size;
 
 	int CurrentSize = 0;
 	try
@@ -161,7 +159,7 @@ void CUiText::CalcDesiredSize(SVector2i AllowedSize)
 			if (Character == '\n')
 			{
 				DesiredSize.X = std::max(CurrentSize, DesiredSize.X);
-				DesiredSize.Y += Font.IsValid() ? Font.Font->size : 30;
+				DesiredSize.Y += UsedFont->Font->size;
 
 				LastCutIndex = Index;
 				LastCutIt = CharIt;
@@ -172,7 +170,7 @@ void CUiText::CalcDesiredSize(SVector2i AllowedSize)
 			if (CurrentSize >= MaxWidth)
 			{
 				DesiredSize.X = std::max(MaxWidth, DesiredSize.X);
-				DesiredSize.Y += Font.IsValid() ? Font.Font->size : 30;
+				DesiredSize.Y += UsedFont->Font->size;
 
 				if (LastCutIndex > 0)
 				{
@@ -211,12 +209,10 @@ void CUiText::Draw(SUiDrawVisitor& DrawVisitor)
 	{
 		if (!Text.empty())
 		{
-			if (Font.IsValid())
-			{
-				SetFont(Font.Font, BLACK);
-			}
+			CUiFont* UsedFont = Font.IsValid() ? &Font : &CApp::Get()->AppSettings.DefaultFont;
+			SetFont(UsedFont->Font, BLACK);
 
-			const int FontSize = Font.IsValid() ? Font.Font->size : 30;
+			const int FontSize = UsedFont->Font->size;
 
 			if (CuttingTextIndexes.empty())
 			{
@@ -320,7 +316,14 @@ void CUiText::OnEdited(char* InText)
 				break;
 			}
 		}
-		
+		else if (Type == UiTextFlags::Float)
+		{
+			if ((NewText[Index] != '.') && (NewText[Index] < '0' || NewText[Index] > '9'))
+			{
+				bIsValid = false;
+				break;
+			}
+		}
 	}
 
 	if (!bIsValid)

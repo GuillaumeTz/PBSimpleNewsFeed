@@ -125,12 +125,12 @@ bool CUiVerticalBox::CanPreviousPage() const
 
 void CUiVerticalBox::Draw(SUiDrawVisitor& DrawVisitor)
 {
-	const SVector2i OriginalAllowdSize = DrawVisitor.AllowedSize;
+	const SVector2i OriginalAllowedSize = DrawVisitor.AllowedSize;
 	const SVector2i OriginalLocation = DrawVisitor.AtLocation;
 	const int OldStartHeight = DrawVisitor.StartHeight;
 	const int OldMaxAllowedHeight = DrawVisitor.MaxAllowedHeight;
 
-	SVector2i PageSize = OriginalAllowdSize;
+	SVector2i PageSize = OriginalAllowedSize;
 	if (MaxPage > 1)
 	{
 		PageSize.Y -= 25;
@@ -181,12 +181,13 @@ void CUiVerticalBox::Draw(SUiDrawVisitor& DrawVisitor)
 		LastWidgetThatPossiblyNeedToBeDrawn = nullptr;
 		if (bNeedToDraw)
 		{
-			DrawVisitor.AtLocation.Y = OriginalLocation.Y + CurrentHeight - LocalIndexPageMinHeight + Widget->GetPadding().TopLeft.Y;
-			DrawVisitor.AtLocation.X = OriginalLocation.X + Widget->GetPadding().TopLeft.X;
+			DrawVisitor.AllowedSize = PageSize;
 
+			DrawVisitor.AtLocation.X = OriginalLocation.X + Widget->GetPadding().TopLeft.X;
+			DrawVisitor.AllowedSize.X -= Widget->GetPaddingAlongX();
 			DrawVisitor.AtLocation.X += Widget->PivotPointRatio.X * float(DrawVisitor.AllowedSize.X - Widget->DesiredSize.X);
 
-			DrawVisitor.AllowedSize.X = PageSize.X - Widget->PivotPointRatio.X * float(DrawVisitor.AllowedSize.X - Widget->DesiredSize.X);
+			DrawVisitor.AtLocation.Y = OriginalLocation.Y + CurrentHeight - LocalIndexPageMinHeight + Widget->GetPadding().TopLeft.Y;
 			DrawVisitor.AllowedSize.Y = PageSize.Y - (CurrentHeight - LocalIndexPageMinHeight) - Widget->GetPaddingAlongY();
 
 			DrawVisitor.MaxAllowedHeight = LocalIndexPageMaxHeight - CurrentHeight;
@@ -228,7 +229,7 @@ void CUiVerticalBox::Draw(SUiDrawVisitor& DrawVisitor)
 	}
 
 	DrawVisitor.AtLocation = OriginalLocation;
-	DrawVisitor.AllowedSize = OriginalAllowdSize;
+	DrawVisitor.AllowedSize = OriginalAllowedSize;
 	DrawVisitor.StartHeight = OldStartHeight;
 	DrawVisitor.MaxAllowedHeight = OldMaxAllowedHeight;
 }

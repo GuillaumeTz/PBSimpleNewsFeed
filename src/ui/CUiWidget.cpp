@@ -19,6 +19,7 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 #include <climits>
 
 #include "inkview.h"
+#include "CApp.h"
 
 SUiDrawVisitor::SUiDrawVisitor()
 {
@@ -71,6 +72,15 @@ void CUiCompositeWidget::AddChild(CUiWidget* Widget)
 	Children.push_back(Widget);
 }
 
+void CUiCompositeWidget::ReplaceChildAt(int Index, CUiWidget* NewWidget)
+{
+	if (Index >= Children.size())
+		return;
+
+	NewWidget->Parent = this;
+	Children.at(Index) = NewWidget;
+}
+
 void CUiCompositeWidget::RemoveChild(const CUiWidget* Widget)
 {
 	for (auto It = Children.begin(); It != Children.end(); ++It)
@@ -113,6 +123,16 @@ CUiWidget::~CUiWidget()
 
 }
 
+void CUiWidget::SetPadding(int Left, int Top, int Right, int Bottom)
+{
+	Padding.TopLeft = SVector2i(Left, Top) * CApp::Get()->AppSettings.GetScale(); Padding.BottomRight = SVector2i(Right, Bottom) * CApp::Get()->AppSettings.GetScale();
+}
+
+void CUiWidget::SetBottomPadding(int Bottom)
+{
+	Padding.BottomRight.Y = Bottom * CApp::Get()->AppSettings.GetScale();
+}
+
 std::vector<TSharedPtr<CUiWidget>> CUiWidget::GetWidgetPath()
 {
 	std::vector<TSharedPtr<CUiWidget>> Path;
@@ -123,5 +143,3 @@ std::vector<TSharedPtr<CUiWidget>> CUiWidget::GetWidgetPath()
 	}
 	return Path;
 }
-
-float CInkViewInterface::Scale = 1.f;

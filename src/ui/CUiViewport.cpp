@@ -66,11 +66,15 @@ void CUiViewport::Draw(bool bUpdate)
 	ClearScreen();
 	DrawVisitor = SUiDrawVisitor();
 	DrawVisitor.AllowedSize.X = CApp::Get()->AppSettings.ResolutionWidth;
-	DrawVisitor.AllowedSize.Y = CApp::Get()->AppSettings.ResolutionHeight - PanelHeight() - CApp::Get()->AppSettings.OffsetTop - CApp::Get()->AppSettings.OffsetBottom;
+	DrawVisitor.AllowedSize.Y = CApp::Get()->AppSettings.ResolutionHeight - CApp::Get()->AppSettings.OffsetTop - CApp::Get()->AppSettings.OffsetBottom;
 	DrawVisitor.AllowedSize -= RootWidget->GetPaddingSize();
 	DrawVisitor.AtLocation = RootWidget->GetPadding().TopLeft;
 
-	// DrawRect(DrawVisitor.AtLocation.X, DrawVisitor.AtLocation.Y, DrawVisitor.AllowedSize.X, DrawVisitor.AllowedSize.Y, 128);
+	DrawLine(0, 1, ScreenWidth(), 1, 1);
+	DrawLine(0, 6, ScreenWidth(), 6, 1);
+
+	DrawLine(0, ScreenHeight() - 6, ScreenWidth(), ScreenHeight() - 6, 1);
+	DrawLine(0, ScreenHeight() - 1, ScreenWidth(), ScreenHeight() - 1, 1);
 
 	RootWidget->CalcDesiredSize(DrawVisitor.AllowedSize);
 	RootWidget->Draw(DrawVisitor);
@@ -93,6 +97,8 @@ void CUiViewport::Draw(bool bUpdate)
 	if (!BigZone.bIsValid)
 		return;
 
+	BigZone.TopLeft -= SVector2i(1, 1);
+	BigZone.BottomRight += SVector2i(1, 1);
 	BigZone.Clamp(SVector2i(0), SVector2i(ScreenWidth() - 1, ScreenHeight() - 1));
 
 	// std::cout << "PartialUpdate " << BigZone.TopLeft.X << " " << BigZone.TopLeft.Y << " " << BigZone.BottomRight.X - BigZone.TopLeft.X << " " << BigZone.BottomRight.Y - BigZone.TopLeft.Y << std::endl;

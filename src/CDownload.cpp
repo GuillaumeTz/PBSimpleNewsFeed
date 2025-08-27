@@ -31,7 +31,7 @@ CDownload::CDownload(const std::string& InUrl, const std::string& InOutFilePath,
 	OutFilePath = InOutFilePath;
 	OnFinished = InOnFinished;
 	Timeout = InTimeout;
-	NbRemainingTries = 2;
+	NbRemainingTries = 1;
 
 	bHasSucceded = false;
 	bLaunched = false;
@@ -190,7 +190,7 @@ bool CDownloadGroup::IsFinished() const
 	return true;
 }
 
-CDownloadManager::CDownloadManager() : MaxParallelDownloads(16), MaxParallelDownloadByHostname(2), NumDownloadRemaining(0)
+CDownloadManager::CDownloadManager() : MaxParallelDownloads(16), MaxParallelDownloadByHostname(1), NumDownloadRemaining(0)
 {
 
 }

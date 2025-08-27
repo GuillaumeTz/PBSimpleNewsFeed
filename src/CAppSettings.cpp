@@ -20,22 +20,64 @@ along with this program.If not, see < https://www.gnu.org/licenses/>.
 
 #include "tinyxml2.h"
 #include <sstream>
+#include <algorithm>
 
 CAppSettings::CAppSettings()
 {
-	MaxEntryToKeepByFeed = 100;
+	Reset();
+}
+
+void CAppSettings::SetScale(float InNewScale)
+{
+	Scale = std::min(std::max(InNewScale, 0.25f), 4.f);
+
+	MenuButtonFont = CUiFont(DEFAULTFONT, int(28.f * Scale));
+	DefaultFont = CUiFont(DEFAULTFONT, int(20.f * Scale));
+	FeedUnReadFont = CUiFont(DEFAULTFONTB, int(20.f * Scale));
+	FeedReadFont = CUiFont(DEFAULTFONT, int(20.f * Scale));
+
+	InterlineDateFont = CUiFont(DEFAULTFONT, int(16.f * Scale));
+
+	EntryTitleFont = CUiFont(DEFAULTFONT, int(24.f * Scale));
+	EntryTitleFontBold = CUiFont(DEFAULTFONTB, int(24.f * Scale));
+	EntryTextFont = CUiFont(DEFAULTFONT, int(16.f * Scale));
+	EntryTextFontBold = CUiFont(DEFAULTFONTB, int(16.f * Scale));
+	EntryTextLinkFont = CUiFont(DEFAULTFONTB, int(16.f * Scale));
+	ReallySmallFont = CUiFont(DEFAULTFONT, int(10.f * Scale));
+
+	FeedPathFont = CUiFont(DEFAULTFONTI, int(16.f * Scale));
+	SwitchViewButtonsFont = CUiFont(DEFAULTFONTB, int(16.f * Scale));
+
+	ContextMenuFont = CUiFont(DEFAULTFONT, int(20.f * Scale));
+}
+
+void CAppSettings::Reset()
+{
+	MaxEntryToKeepByFeed = 50;
 	PathToOPML = FLASHDIR "/Dropbox PocketBook/subscriptions.opml";
 	PathToSavedOPML = APP_FOLDER "/savedOPML.xml";
 	ConfigFilePath = APP_FOLDER "/config.xml";
 	bSynchronizeAtStart = false;
+	bHideFooterNavigation = false;
 	ResolutionWidth = ScreenWidth();
 	ResolutionHeight = ScreenHeight();
-	OffsetTop = 100;
-	OffsetBottom = 100;
+	Scale = 1.f;
+#ifndef IVSAPP
+	OffsetTop = 160;
+#endif
+	OffsetBottom = 0;
+
+	icanvas* Canvas = GetCanvas();
+	Scale = float(Canvas->width) / 600.f;
+	OffsetTop = float(OffsetTop) * float(Canvas->height) / 1872.f; // I took my inkpad 3 as reference for the scaling
+	
+	SetScale(Scale);
 }
 
 void CAppSettings::LoadConfig()
 {
+	Reset();
+
 	{
 		iv_buildpath(ConfigFilePath.c_str());
 		tinyxml2::XMLDocument XmlDoc;
@@ -64,6 +106,11 @@ void CAppSettings::LoadConfig()
 				ResolutionHeight = std::max(ResolutionHeight, 640);
 				std::cerr << "ResolutionHeight " << ResolutionHeight << std::endl;
 			}
+			if (tinyxml2::XMLElement* Element = XmlDoc.RootElement()->FirstChildElement("Scale"))
+			{
+				Scale = atof(Element->GetText());
+				std::cerr << "Scale " << Scale << std::endl;
+			}
 		}
 	}
 
@@ -81,33 +128,11 @@ void CAppSettings::LoadConfig()
 	ResolutionHeight = std::max(ResolutionHeight, 640);
 	ResolutionHeight = std::min(ResolutionHeight, ScreenHeight());
 
+	SetScale(Scale);
+
 	icanvas* Canvas = GetCanvas();
-	CInkViewInterface::Scale = float(Canvas->width) / 600.f;
-
-	std::cerr << "Resolution : " << ResolutionWidth << " x " << ResolutionHeight << " scale " << CInkViewInterface::Scale << std::endl;
+	std::cerr << "Resolution : " << ResolutionWidth << " x " << ResolutionHeight << " scale " << Scale << std::endl;
 	std::cerr << "Canvas size : " << Canvas->width << " x " << Canvas->height << " ClipX " << Canvas->clipx1 << " => " << Canvas->clipx2 << " ClipY" << Canvas->clipy1 << " = > " << Canvas->clipy2 << std::endl;
-
-	ResolutionWidth = Canvas->width;
-	ResolutionHeight = Canvas->height;
-
-	MenuButtonFont = CUiFont(DEFAULTFONT, int(28.f * CInkViewInterface::Scale));
-	DefaultFont = CUiFont(DEFAULTFONT, int(20.f * CInkViewInterface::Scale));
-	FeedUnReadFont = CUiFont(DEFAULTFONTB, int(20.f * CInkViewInterface::Scale));
-	FeedReadFont = CUiFont(DEFAULTFONT, int(20.f * CInkViewInterface::Scale));
-
-	InterlineDateFont = CUiFont(DEFAULTFONT, int(16.f * CInkViewInterface::Scale));
-
-	EntryTitleFont = CUiFont(DEFAULTFONT, int(24.f * CInkViewInterface::Scale));
-	EntryTitleFontBold = CUiFont(DEFAULTFONTB, int(24.f * CInkViewInterface::Scale));
-	EntryTextFont = CUiFont(DEFAULTFONT, int(16.f * CInkViewInterface::Scale));
-	EntryTextFontBold = CUiFont(DEFAULTFONTB, int(16.f * CInkViewInterface::Scale));
-	EntryTextLinkFont = CUiFont(DEFAULTFONTB, int(16.f * CInkViewInterface::Scale));
-	ReallySmallFont = CUiFont(DEFAULTFONT, int(10.f * CInkViewInterface::Scale));
-
-	FeedPathFont = CUiFont(DEFAULTFONTI, int(16.f * CInkViewInterface::Scale));
-	SwitchViewButtonsFont = CUiFont(DEFAULTFONTB, int(16.f * CInkViewInterface::Scale));
-
-	ContextMenuFont = CUiFont(DEFAULTFONT, int(20.f * CInkViewInterface::Scale));
 }
 
 void CAppSettings::SaveConfig()
@@ -142,6 +167,14 @@ void CAppSettings::SaveConfig()
 		tinyxml2::XMLElement* Element = XmlDoc.NewElement("ResolutionHeight");
 		std::stringstream stream;
 		stream << ResolutionHeight;
+		Element->InsertFirstChild(XmlDoc.NewText(stream.str().c_str()));
+		XmlDoc.RootElement()->InsertEndChild(Element);
+	}
+
+	{
+		tinyxml2::XMLElement* Element = XmlDoc.NewElement("Scale");
+		std::stringstream stream;
+		stream << Scale;
 		Element->InsertFirstChild(XmlDoc.NewText(stream.str().c_str()));
 		XmlDoc.RootElement()->InsertEndChild(Element);
 	}
