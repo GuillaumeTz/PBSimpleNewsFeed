@@ -111,6 +111,16 @@ void CAppSettings::LoadConfig()
 				Scale = atof(Element->GetText());
 				std::cerr << "Scale " << Scale << std::endl;
 			}
+			if (tinyxml2::XMLElement* Element = XmlDoc.RootElement()->FirstChildElement("bSynchronizeAtStart"))
+			{
+				bSynchronizeAtStart = atoi(Element->GetText()) != 0;
+				std::cerr << "bSynchronizeAtStart " << bSynchronizeAtStart << std::endl;
+			}
+			if (tinyxml2::XMLElement* Element = XmlDoc.RootElement()->FirstChildElement("bHideFooterNavigation"))
+			{
+				bHideFooterNavigation = atoi(Element->GetText()) != 0;
+				std::cerr << "bHideFooterNavigation " << bHideFooterNavigation << std::endl;
+			}
 		}
 	}
 
@@ -176,6 +186,18 @@ void CAppSettings::SaveConfig()
 		std::stringstream stream;
 		stream << Scale;
 		Element->InsertFirstChild(XmlDoc.NewText(stream.str().c_str()));
+		XmlDoc.RootElement()->InsertEndChild(Element);
+	}
+
+	{
+		tinyxml2::XMLElement* Element = XmlDoc.NewElement("bSynchronizeAtStart");
+		Element->InsertFirstChild(XmlDoc.NewText(bSynchronizeAtStart ? "1" : "0"));
+		XmlDoc.RootElement()->InsertEndChild(Element);
+	}
+
+	{
+		tinyxml2::XMLElement* Element = XmlDoc.NewElement("bHideFooterNavigation");
+		Element->InsertFirstChild(XmlDoc.NewText(bHideFooterNavigation ? "1" : "0"));
 		XmlDoc.RootElement()->InsertEndChild(Element);
 	}
 
